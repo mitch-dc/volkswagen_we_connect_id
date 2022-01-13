@@ -1,13 +1,3 @@
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
-[![License][license-shield]](LICENSE.md)
-
-![Project Maintenance][maintenance-shield]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
-
-[![Community Forum][forum-shield]][forum]
-
 # Volkswagen We Connect ID
 
 This integration is only for the 'ID' cars from Volkswagen.
