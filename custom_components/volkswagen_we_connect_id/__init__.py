@@ -37,17 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def volkswagen_id_set_climatisation(call: ServiceCall) -> None:
 
         target_temperature = 0
-        if call.data["target_temp"]:
+        if hasattr(call, "target_temp"):
             target_temperature = call.data["target_temp"]
 
         operation = ControlOperation.START
         if call.data["start_stop"] == "stop":
             operation = ControlOperation.STOP
 
-        await hass.async_add_executor_job(api.update)
+        # await hass.async_add_executor_job(api.update)
         for vin, vehicle in api.vehicles.items():
             if vin == call.data["vin"]:
-                await hass.async_add_executor_job(
+                return await hass.async_add_executor_job(
                     set_climatisation, vehicle, operation, target_temperature
                 )
 
@@ -56,27 +56,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, "volkswagen_id_set_climatisation", volkswagen_id_set_climatisation
     )
 
-    return True
-
 
 def set_climatisation(
     vehicle: Vehicle, operation: ControlOperation, target_temperature: float
 ) -> bool:
     """Set climate in your volkswagen."""
 
-    if target_temperature > 10:
+    if (
+        target_temperature > 10
+        and target_temperature
+        != vehicle.domains["climatisation"][
+            "climatisationSettings"
+        ].targetTemperature_C.value
+    ):
         vehicle.domains["climatisation"][
             "climatisationSettings"
         ].targetTemperature_C.value = target_temperature
         _LOGGER.info("Sended target temperature call to the car")
 
-    if operation == ControlOperation.START:
-        vehicle.controls.climatizationControl.value = ControlOperation.START
-        _LOGGER.info("Sended start climate call to the car")
+    if (
+        operation == ControlOperation.START
+        and vehicle.domains["climatisation"][
+            "climatisationStatus"
+        ].climatisationState.value
+        != "heating"
+    ):
+        try:
+            vehicle.controls.climatizationControl.value = ControlOperation.START
+        except Exception as exc:
+            _LOGGER.error(
+                exc.args[0] + " - Restart/start the car to reset the rate_limit."
+            )
+            return False
+        else:
+            _LOGGER.info("Sended start climate call to the car")
 
-    elif operation == ControlOperation.STOP:
+    elif (
+        operation == ControlOperation.STOP
+        and vehicle.domains["climatisation"][
+            "climatisationStatus"
+        ].climatisationState.value
+        == "heating"
+    ):
+        try:
+            vehicle.controls.climatizationControl.value = ControlOperation.START
+        except Exception as exc:
+            _LOGGER.error(exc.args[0])
+            return False
+        else:
+            _LOGGER.info("Sended stop climate call to the car")
         vehicle.controls.climatizationControl.value = ControlOperation.STOP
-        _LOGGER.info("Sended start stop call to the car")
 
     return True
 
