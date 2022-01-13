@@ -56,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, "volkswagen_id_set_climatisation", volkswagen_id_set_climatisation
     )
 
+    return True
+
 
 def set_climatisation(
     vehicle: Vehicle, operation: ControlOperation, target_temperature: float
