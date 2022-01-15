@@ -36,21 +36,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     async def volkswagen_id_set_climatisation(call: ServiceCall) -> None:
 
-        await hass.async_add_executor_job(api.update)
-
+        vin = call.data["vin"]
+        start_stop = call.data["start_stop"]
         target_temperature = 0
         if hasattr(call, "target_temp"):
             target_temperature = call.data["target_temp"]
 
-        # await hass.async_add_executor_job(api.update)
-        for vin, vehicle in api.vehicles.items():
-            if vin == call.data["vin"]:
-                return await hass.async_add_executor_job(
-                    set_climatisation,
-                    vehicle,
-                    call.data["start_stop"],
-                    target_temperature,
-                )
+        await hass.async_add_executor_job(
+            set_climatisation,
+            vin,
+            api,
+            start_stop,
+            target_temperature,
+        )
 
     # Register our service with Home Assistant.
     hass.services.async_register(
@@ -61,49 +59,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def set_climatisation(
-    vehicle: Vehicle, operation: str, target_temperature: float
+    callDataVIN, api: weconnect.WeConnect, operation: str, target_temperature: float
 ) -> bool:
     """Set climate in your volkswagen."""
 
-    if (
-        target_temperature > 10
-        and target_temperature
-        != vehicle.domains["climatisation"][
-            "climatisationSettings"
-        ].targetTemperature_C.value
-    ):
-        vehicle.domains["climatisation"][
-            "climatisationSettings"
-        ].targetTemperature_C.value = target_temperature
-        _LOGGER.info("Sended target temperature call to the car")
+    api.login()
+    api.update()
 
-    if operation == "start":
-        try:
+    for vin, vehicle in api.vehicles.items():
+        if vin == callDataVIN:
             if (
-                vehicle.controls.climatizationControl is not None
-                and vehicle.controls.climatizationControl.enabled
+                target_temperature > 10
+                and target_temperature
+                != vehicle.domains["climatisation"][
+                    "climatisationSettings"
+                ].targetTemperature_C.value
             ):
-                vehicle.controls.climatizationControl.value = "start"
-                _LOGGER.info("Sended start climate call to the car")
-        except Exception as exc:
-            _LOGGER.error(
-                exc.args[0] + " - Restart/start the car to reset the rate_limit."
-            )
-            return False
+                vehicle.domains["climatisation"][
+                    "climatisationSettings"
+                ].targetTemperature_C.value = target_temperature
+                _LOGGER.info("Sended target temperature call to the car")
 
-    if operation == "stop":
-        try:
-            if (
-                vehicle.controls.climatizationControl is not None
-                and vehicle.controls.climatizationControl.enabled
-            ):
-                vehicle.controls.climatizationControl.value = "stop"
-                _LOGGER.info("Sended stop climate call to the car")
-        except Exception as exc:
-            _LOGGER.error(
-                exc.args[0] + " - Restart/start the car to reset the rate_limit."
-            )
-            return False
+            if operation == "start":
+                try:
+                    if (
+                        vehicle.controls.climatizationControl is not None
+                        and vehicle.controls.climatizationControl.enabled
+                    ):
+                        vehicle.controls.climatizationControl.value = "start"
+                        _LOGGER.info("Sended start climate call to the car")
+                except Exception as exc:
+                    _LOGGER.error(
+                        exc.args[0]
+                        + " - Restart/start the car to reset the rate_limit."
+                    )
+                    return False
+
+            if operation == "stop":
+                try:
+                    if (
+                        vehicle.controls.climatizationControl is not None
+                        and vehicle.controls.climatizationControl.enabled
+                    ):
+                        vehicle.controls.climatizationControl.value = "stop"
+                        _LOGGER.info("Sended stop climate call to the car")
+                except Exception as exc:
+                    _LOGGER.error(
+                        exc.args[0]
+                        + " - Restart/start the car to reset the rate_limit."
+                    )
+                    return False
+
+    api.update()
 
     return True
 
