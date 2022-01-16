@@ -3,7 +3,7 @@
   "name": "Volkswagen We Connect ID",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/volkswagen_we_connect_id",
-  "requirements": ["weconnect==0.30.4"],
+  "requirements": ["weconnect==0.32"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
