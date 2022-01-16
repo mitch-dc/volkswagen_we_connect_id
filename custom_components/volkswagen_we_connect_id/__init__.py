@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-PLATFORMS: list[str] = ["sensor"]
+PLATFORMS: list[str] = ["sensor", "button"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,7 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         loginOnInit=False,
     )
 
+    await hass.async_add_executor_job(api.update)
+
     hass.data[DOMAIN][entry.entry_id] = api
+    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = api.vehicles
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -50,10 +53,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             target_temperature,
         )
 
+    @callback
+    async def volkswagen_id_set_target_soc(call: ServiceCall) -> None:
+
+        vin = call.data["vin"]
+        target_soc = 0
+        if "target_soc" in call.data:
+            target_soc = call.data["target_soc"]
+
+        await hass.async_add_executor_job(
+            set_target_soc,
+            vin,
+            api,
+            target_soc,
+        )
+
     # Register our service with Home Assistant.
     hass.services.async_register(
         DOMAIN, "volkswagen_id_set_climatisation", volkswagen_id_set_climatisation
     )
+
+    # Register our service with Home Assistant.
+    hass.services.async_register(
+        DOMAIN, "volkswagen_id_set_target_soc", volkswagen_id_set_target_soc
+    )
+
+    return True
+
+
+def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> bool:
+    """Set target SOC in your volkswagen."""
+
+    api.login()
+    api.update()
+
+    for vin, vehicle in api.vehicles.items():
+        if vin == callDataVIN:
+            if (
+                target_soc > 10
+                and target_soc
+                != vehicle.domains["charging"]["chargingSettings"].targetSOC_pct.value
+            ):
+                try:
+                    vehicle.domains["charging"][
+                        "chargingSettings"
+                    ].targetSOC_pct.value = target_soc
+                    _LOGGER.info("Sended target SoC call to the car")
+                except Exception as exc:
+                    _LOGGER.error(
+                        exc.args[0]
+                        + " - Restart/start the car to reset the rate_limit."
+                    )
+                    return False
+
+    api.update()
 
     return True
 
@@ -68,6 +121,7 @@ def set_climatisation(
 
     for vin, vehicle in api.vehicles.items():
         if vin == callDataVIN:
+
             if (
                 target_temperature > 10
                 and target_temperature
@@ -75,10 +129,17 @@ def set_climatisation(
                     "climatisationSettings"
                 ].targetTemperature_C.value
             ):
-                vehicle.domains["climatisation"][
-                    "climatisationSettings"
-                ].targetTemperature_C.value = target_temperature
-                _LOGGER.info("Sended target temperature call to the car")
+                try:
+                    vehicle.domains["climatisation"][
+                        "climatisationSettings"
+                    ].targetTemperature_C.value = target_temperature
+                    _LOGGER.info("Sended target temperature call to the car")
+                except Exception as exc:
+                    _LOGGER.error(
+                        exc.args[0]
+                        + " - Restart/start the car to reset the rate_limit."
+                    )
+                    return False
 
             if operation == "start":
                 try:

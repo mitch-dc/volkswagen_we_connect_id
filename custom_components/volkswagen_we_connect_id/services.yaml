@@ -26,3 +26,26 @@ volkswagen_id_set_climatisation:
         number:
           min: 10
           max: 30
+          unit_of_measurement: "ºC"
+
+volkswagen_id_set_target_soc:
+  name: Volkswagen ID Set Target SoC
+  description: Sets the target SoC in Volkswagen ID cars.
+  fields:
+    vin:
+      name: VIN
+      description: Vehicle identification number for the car.
+      required: true
+      example: WVGZZZA1ZMP001337
+      selector:
+        text:
+    target_soc:
+      name: Target State of Charge.
+      description: Sets state of charge in percentage.
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 100
+          step: 10
+          unit_of_measurement: "%"

@@ -96,11 +96,11 @@ BATTERYSTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
     weConnect = hass.data[DOMAIN][config_entry.entry_id]
-    await hass.async_add_executor_job(weConnect.update)
+    vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
+    # await hass.async_add_executor_job(weConnect.update)
 
     async def async_update_data():
         """Fetch data from API endpoint.
-
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
@@ -113,11 +113,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name="volkswagen_we_connect_id_sensors",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=15),
+        update_interval=timedelta(seconds=30),
     )
 
     entities: list[VolkswagenIDSensor] = []
-    for vin, vehicle in weConnect.vehicles.items():
+    for vin, vehicle in vehicles.items():  # weConnect.vehicles.items():
         for sensor in CLIMASTATUS_SENSORS:
             entities.append(
                 VolkswagenIDSensor(
