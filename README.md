@@ -7,7 +7,8 @@ Platform | Description
 -- | --
 `sensor` | Show information from your Volkswagen ID car.
 
-![example][exampleimg]
+![image](https://user-images.githubusercontent.com/15835274/149675681-a0c6804c-3179-4fd3-ad74-ab489c8986dd.png)
+
 
 ## Installation
 
