@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vin = call.data["vin"]
         start_stop = call.data["start_stop"]
         target_temperature = 0
-        if hasattr(call, "target_temp"):
+        if "target_temp" in call.data:
             target_temperature = call.data["target_temp"]
 
         await hass.async_add_executor_job(
