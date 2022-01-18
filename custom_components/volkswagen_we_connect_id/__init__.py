@@ -9,13 +9,15 @@ from weconnect.elements.control_operation import ControlOperation
 from weconnect.elements.vehicle import Vehicle
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-PLATFORMS: list[str] = ["sensor", "button"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.CAMERA]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -240,7 +242,7 @@ class VolkswagenIDBaseEntity(Entity):
 
     def __init__(
         self,
-        vehicle,
+        vehicle: weconnect.Vehicle,
         data,
         we_connect: weconnect.WeConnect,
         coordinator: CoordinatorEntity,
@@ -257,6 +259,7 @@ class VolkswagenIDBaseEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"vw{vehicle.vin}")},
             manufacturer="Volkswagen",
+            model=f"{vehicle.model}",  # format because of the ID.3/ID.4 names.
             name=f"Volkswagen {vehicle.nickname}",
         )
 

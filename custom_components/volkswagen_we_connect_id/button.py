@@ -1,5 +1,9 @@
 """TOLO Sauna Button controls."""
 
+from weconnect import weconnect
+from weconnect.elements.control_operation import ControlOperation
+from weconnect.elements.vehicle import Vehicle
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -7,9 +11,6 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VolkswagenIDBaseEntity, set_climatisation
-from weconnect import weconnect
-from weconnect.elements.control_operation import ControlOperation
-from weconnect.elements.vehicle import Vehicle
 from .const import DOMAIN
 
 

@@ -1,12 +1,14 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import cast
 
+from weconnect import weconnect
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from . import VolkswagenIDBaseEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
@@ -19,100 +21,122 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_MINUTES,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import VolkswagenIDBaseEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIMASTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key="climatisationState", name="Climatisation State"),
-    SensorEntityDescription(
+
+@dataclass
+class VolkswagenIdEntityDescription(SensorEntityDescription):
+    """Describes Volkswagen ID sensor entity."""
+
+    local_address: str | None = None
+
+
+SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
+    VolkswagenIdEntityDescription(
+        key="climatisationState",
+        name="Climatisation State",
+        local_address="/climatisation/climatisationStatus/climatisationState",
+    ),
+    VolkswagenIdEntityDescription(
         key="remainingClimatisationTime_min",
         name="Remaining Climatisation Time",
         native_unit_of_measurement=TIME_MINUTES,
+        local_address="/climatisation/climatisationStatus/remainingClimatisationTime_min",
     ),
-)
-
-CLIMASETTINGS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         key="targetTemperature_C",
         name="Target Temperature C",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        local_address="/climatisation/climatisationSettings/targetTemperature_C",
     ),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         key="targetTemperature_F",
         name="Target Temperature F",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
+        local_address="/climatisation/climatisationSettings/targetTemperature_F",
     ),
-)
-
-
-CHARGESTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
+        key="unitInCar",
+        name="Unit In car",
+        local_address="/climatisation/climatisationSettings/unitInCar",
+    ),
+    VolkswagenIdEntityDescription(
         key="chargingState",
         name="Charging State",
         icon="mdi:ev-station",
+        local_address="/charging/chargingStatus/chargingState",
     ),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         key="remainingChargingTimeToComplete_min",
         name="Remaining Charging Time",
         native_unit_of_measurement=TIME_MINUTES,
+        local_address="/charging/chargingStatus/remainingChargingTimeToComplete_min",
     ),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
+        key="chargeMode",
+        name="Charging Mode",
+        icon="mdi:ev-station",
+        local_address="/charging/chargingStatus/chargeMode",
+    ),
+    VolkswagenIdEntityDescription(
         key="chargePower_kW",
         name="Charge Power",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
+        local_address="/charging/chargingStatus/chargePower_kW",
     ),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         key="chargeRate_kmph",
         name="Charge Rate",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         device_class=DEVICE_CLASS_POWER,
+        local_address="/charging/chargingStatus/chargeRate_kmph",
     ),
-)
-
-CHARGESETTINGS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key="maxChargeCurrentAC", name="Charge Current AC"),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
+        key="maxChargeCurrentAC",
+        name="Charge Current AC",
+        local_address="/charging/chargingSettings/maxChargeCurrentAC",
+    ),
+    VolkswagenIdEntityDescription(
         key="targetSOC_pct",
         name="Target State of Charge",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        local_address="/charging/chargingSettings/targetSOC_pct",
     ),
-)
-
-BATTERYSTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         key="currentSOC_pct",
         name="State of Charge",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        local_address="/charging/batteryStatus/currentSOC_pct",
     ),
-    SensorEntityDescription(
+    VolkswagenIdEntityDescription(
         name="Range",
         key="cruisingRangeElectric_km",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        local_address="/charging/batteryStatus/cruisingRangeElectric_km",
     ),
 )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
-    weConnect = hass.data[DOMAIN][config_entry.entry_id]
+    we_connect: weconnect.WeConnect
+    we_connect = hass.data[DOMAIN][config_entry.entry_id]
     vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
-    # await hass.async_add_executor_job(weConnect.update)
 
     async def async_update_data():
-        """Fetch data from API endpoint.
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        await hass.async_add_executor_job(weConnect.update)
+        await hass.async_add_executor_job(we_connect.update)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -125,54 +149,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     entities: list[VolkswagenIDSensor] = []
-    for vin, vehicle in vehicles.items():  # weConnect.vehicles.items():
-        for sensor in CLIMASTATUS_SENSORS:
+    for vin, vehicle in vehicles.items():
+        for sensor in SENSORS:
             entities.append(
                 VolkswagenIDSensor(
                     vehicle,
                     sensor,
-                    vehicle.domains["climatisation"]["climatisationStatus"],
-                    weConnect,
-                    coordinator,
-                )
-            )
-        for sensor in CLIMASETTINGS_SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    vehicle.domains["climatisation"]["climatisationSettings"],
-                    weConnect,
-                    coordinator,
-                )
-            )
-        for sensor in CHARGESTATUS_SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    vehicle.domains["charging"]["chargingStatus"],
-                    weConnect,
-                    coordinator,
-                )
-            )
-        for sensor in CHARGESETTINGS_SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    vehicle.domains["charging"]["chargingSettings"],
-                    weConnect,
-                    coordinator,
-                )
-            )
-        for sensor in BATTERYSTATUS_SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    vehicle.domains["charging"]["batteryStatus"],
-                    weConnect,
+                    we_connect,
                     coordinator,
                 )
             )
@@ -183,23 +166,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
     """Representation of a VolkswagenID vehicle sensor."""
 
-    entity_description: SensorEntityDescription
+    entity_description: VolkswagenIdEntityDescription
 
-    def __init__(self, vehicle, description, data, we_connect, coordinator) -> None:
+    def __init__(
+        self,
+        vehicle: weconnect.Vehicle,
+        sensor: VolkswagenIdEntityDescription,
+        we_connect: weconnect.WeConnect,
+        coordinator: DataUpdateCoordinator,
+    ) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        super().__init__(vehicle, data, we_connect, coordinator)
-        self.entity_description = description
+        super().__init__(vehicle, sensor, we_connect, coordinator)
+
+        self.entity_description = sensor
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {vehicle.nickname} {description.name}"
-        self._attr_unique_id = f"{vehicle.vin}-{description.key}"
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
+        self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
+        self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
+        self._data = f"/vehicles/{vehicle.vin}{sensor.local_address}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = getattr(self._data, self.entity_description.key).value
+        state = self._we_connect.getByAddressString(self._data)
 
-        if hasattr(state, "value"):
+        while hasattr(state, "value"):
             state = state.value
 
         return cast(StateType, state)
