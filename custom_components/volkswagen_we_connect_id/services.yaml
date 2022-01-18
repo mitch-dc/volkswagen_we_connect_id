@@ -49,3 +49,24 @@ volkswagen_id_set_target_soc:
           max: 100
           step: 10
           unit_of_measurement: "%"
+
+volkswagen_id_set_ac_charge_speed:
+  name: Volkswagen ID Set AC Charge speed
+  description: Sets the AC charging speed in Volkswagen ID cars.
+  fields:
+    vin:
+      name: VIN
+      description: Vehicle identification number for the car.
+      required: true
+      example: WVGZZZA1ZMP001337
+      selector:
+        text:
+    maximum_reduced:
+      name: Maximum or reduced
+      description: Starts or stops climatisation.
+      required: true
+      selector:
+        select:
+          options:
+            - "maximum"
+            - "reduced"
