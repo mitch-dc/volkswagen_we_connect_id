@@ -6,6 +6,7 @@ _Volkswagen We Connect ID sensor provides statistics from the Volkswagen ID Api 
 Platform | Description
 -- | --
 `sensor` | Show information from your Volkswagen ID car.
+`button` | Start climatization in your Volkswagen ID car.
 
 ![image](https://user-images.githubusercontent.com/15835274/149675681-a0c6804c-3179-4fd3-ad74-ab489c8986dd.png)
 
