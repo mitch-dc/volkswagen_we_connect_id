@@ -16,6 +16,7 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_MINUTES,
 )
 from homeassistant.helpers.typing import StateType
@@ -37,11 +38,18 @@ CLIMASTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
 CLIMASETTINGS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="targetTemperature_C",
-        name="Target Temperature",
+        name="Target Temperature C",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
+    SensorEntityDescription(
+        key="targetTemperature_F",
+        name="Target Temperature F",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+    ),
 )
+
 
 CHARGESTATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

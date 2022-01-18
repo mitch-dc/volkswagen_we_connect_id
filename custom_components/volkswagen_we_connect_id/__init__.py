@@ -68,15 +68,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             target_soc,
         )
 
-    # Register our service with Home Assistant.
+    @callback
+    async def volkswagen_id_set_ac_charge_speed(call: ServiceCall) -> None:
+
+        vin = call.data["vin"]
+        if "maximum_reduced" in call.data:
+            await hass.async_add_executor_job(
+                set_ac_charging_speed,
+                vin,
+                api,
+                call.data["maximum_reduced"],
+            )
+
+    # Register our services with Home Assistant.
     hass.services.async_register(
         DOMAIN, "volkswagen_id_set_climatisation", volkswagen_id_set_climatisation
     )
-
-    # Register our service with Home Assistant.
     hass.services.async_register(
         DOMAIN, "volkswagen_id_set_target_soc", volkswagen_id_set_target_soc
     )
+    hass.services.async_register(
+        DOMAIN, "volkswagen_id_set_ac_charge_speed", volkswagen_id_set_ac_charge_speed
+    )
+
+    return True
+
+
+def set_ac_charging_speed(
+    callDataVIN, api: weconnect.WeConnect, charging_speed: float
+) -> bool:
+    """Set charging speed in your volkswagen."""
+
+    api.login()
+    api.update()
+
+    for vin, vehicle in api.vehicles.items():
+        if vin == callDataVIN:
+            if (
+                charging_speed
+                != vehicle.domains["charging"][
+                    "chargingSettings"
+                ].maxChargeCurrentAC.value
+            ):
+                try:
+                    vehicle.domains["charging"][
+                        "chargingSettings"
+                    ].maxChargeCurrentAC.value = charging_speed
+                    _LOGGER.info("Sended charging speed call to the car")
+                except Exception as exc:
+                    _LOGGER.error(
+                        exc.args[0]
+                        + " - Restart/start the car to reset the rate_limit."
+                    )
+                    return False
+
+    api.update()
 
     return True
 
