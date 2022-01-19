@@ -68,13 +68,13 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         key="frontWindowHeatingState",
         name="Front Window Heating State",
         local_address="/climatisation/windowHeatingStatus/windows/front/windowHeatingState",
-        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
+        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="rearWindowHeatingState",
         name="Rear Window Heating State",
         local_address="/climatisation/windowHeatingStatus/windows/rear/windowHeatingState",
-        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
+        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="autoUnlockPlugWhenCharged",
@@ -87,14 +87,14 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Plug Connection State",
         local_address="/charging/plugStatus/plugConnectionState",
         device_class=BinarySensorDeviceClass.PLUG,
-        on_value=PlugStatus.PlugConnectionState.CONNECTED,
+        on_value=PlugStatus.PlugConnectionState.CONNECTED.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugLockState",
         name="Plug Lock State",
         local_address="/charging/plugStatus/plugLockState",
         device_class=BinarySensorDeviceClass.LOCK,
-        on_value=PlugStatus.PlugLockState.LOCKED,
+        on_value=PlugStatus.PlugLockState.LOCKED.value,
     ),
 )
 
@@ -159,4 +159,9 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         """Return true if sensor is on."""
 
         state = self._we_connect.getByAddressString(self._data)
-        return state == self.entity_description.on_value
+
+        while hasattr(state, "value"):
+            state = state.value
+
+        result = state == self.entity_description.on_value
+        return result
