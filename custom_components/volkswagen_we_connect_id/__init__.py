@@ -101,9 +101,6 @@ def set_ac_charging_speed(
 ) -> bool:
     """Set charging speed in your volkswagen."""
 
-    api.login()
-    api.update()
-
     for vin, vehicle in api.vehicles.items():
         if vin == callDataVIN:
             if (
@@ -124,16 +121,11 @@ def set_ac_charging_speed(
                     )
                     return False
 
-    api.update()
-
     return True
 
 
 def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> bool:
     """Set target SOC in your volkswagen."""
-
-    api.login()
-    api.update()
 
     for vin, vehicle in api.vehicles.items():
         if vin == callDataVIN:
@@ -153,9 +145,6 @@ def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> 
                         + " - Restart/start the car to reset the rate_limit."
                     )
                     return False
-
-    api.update()
-
     return True
 
 
@@ -163,9 +152,6 @@ def set_climatisation(
     callDataVIN, api: weconnect.WeConnect, operation: str, target_temperature: float
 ) -> bool:
     """Set climate in your volkswagen."""
-
-    api.login()
-    api.update()
 
     for vin, vehicle in api.vehicles.items():
         if vin == callDataVIN:
@@ -195,7 +181,9 @@ def set_climatisation(
                         vehicle.controls.climatizationControl is not None
                         and vehicle.controls.climatizationControl.enabled
                     ):
-                        vehicle.controls.climatizationControl.value = "start"
+                        vehicle.controls.climatizationControl.value = (
+                            ControlOperation.START
+                        )
                         _LOGGER.info("Sended start climate call to the car")
                 except Exception as exc:
                     _LOGGER.error(
@@ -210,7 +198,9 @@ def set_climatisation(
                         vehicle.controls.climatizationControl is not None
                         and vehicle.controls.climatizationControl.enabled
                     ):
-                        vehicle.controls.climatizationControl.value = "stop"
+                        vehicle.controls.climatizationControl.value = (
+                            ControlOperation.STOP
+                        )
                         _LOGGER.info("Sended stop climate call to the car")
                 except Exception as exc:
                     _LOGGER.error(
@@ -218,9 +208,6 @@ def set_climatisation(
                         + " - Restart/start the car to reset the rate_limit."
                     )
                     return False
-
-    api.update()
-
     return True
 
 
