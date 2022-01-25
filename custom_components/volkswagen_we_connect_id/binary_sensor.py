@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast
 
 from weconnect import weconnect
 from weconnect.elements.plug_status import PlugStatus
@@ -15,8 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.typing import StateType
+
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import VolkswagenIDBaseEntity
@@ -38,63 +36,57 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         key="climatisationWithoutExternalPower",
         name="Climatisation Without External Power",
         local_address="/climatisation/climatisationSettings/climatisationWithoutExternalPower",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="climatizationAtUnlock",
         name="Climatisation At Unlock",
         local_address="/climatisation/climatisationSettings/climatizationAtUnlock",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontLeftEnabled",
         name="Zone Front Left Enabled",
         local_address="/climatisation/climatisationSettings/zoneFrontLeftEnabled",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontRightEnabled",
         name="Zone Front Right Enabled",
         local_address="/climatisation/climatisationSettings/zoneFrontRightEnabled",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="windowHeatingEnabled",
         name="Window Heating Enabled",
         local_address="/climatisation/climatisationSettings/windowHeatingEnabled",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="frontWindowHeatingState",
         name="Front Window Heating State",
         local_address="/climatisation/windowHeatingStatus/windows/front/windowHeatingState",
-        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON.value,
+        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="rearWindowHeatingState",
         name="Rear Window Heating State",
         local_address="/climatisation/windowHeatingStatus/windows/rear/windowHeatingState",
-        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON.value,
+        on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="autoUnlockPlugWhenCharged",
         name="Auto Unlock Plug When Charged",
         local_address="/charging/chargingSettings/autoUnlockPlugWhenCharged",
-        on_value=True,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugConnectionState",
         name="Plug Connection State",
         local_address="/charging/plugStatus/plugConnectionState",
         device_class=BinarySensorDeviceClass.PLUG,
-        on_value=PlugStatus.PlugConnectionState.CONNECTED.value,
+        on_value=PlugStatus.PlugConnectionState.CONNECTED,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugLockState",
         name="Plug Lock State",
         local_address="/charging/plugStatus/plugLockState",
         device_class=BinarySensorDeviceClass.LOCK,
-        on_value=PlugStatus.PlugLockState.LOCKED.value,
+        on_value=PlugStatus.PlugLockState.LOCKED,
     ),
 )
 
@@ -152,7 +144,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         self._coordinator = coordinator
         self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
         self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
-        self._data = f"/vehicles/{vehicle.vin}{sensor.local_address}"
+        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
 
     @property
     def is_on(self) -> bool:
@@ -163,5 +155,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         while hasattr(state, "value"):
             state = state.value
 
-        result = state == self.entity_description.on_value
-        return result
+        if type(state) is bool:
+            return state
+
+        return state == self.entity_description.on_value.value

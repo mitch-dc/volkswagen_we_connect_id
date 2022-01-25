@@ -183,7 +183,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
         self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
         self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
-        self._data = f"/vehicles/{vehicle.vin}{sensor.local_address}"
+        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
 
     @property
     def native_value(self) -> StateType:

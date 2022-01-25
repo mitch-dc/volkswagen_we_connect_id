@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,13 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if "target_temp" in call.data:
             target_temperature = call.data["target_temp"]
 
-        await hass.async_add_executor_job(
-            set_climatisation,
-            vin,
-            api,
-            start_stop,
-            target_temperature,
-        )
+        if (
+            await hass.async_add_executor_job(
+                set_climatisation,
+                vin,
+                api,
+                start_stop,
+                target_temperature,
+            )
+            is False
+        ):
+            _LOGGER.error("Cannot send climate request to car")
 
     @callback
     async def volkswagen_id_set_target_soc(call: ServiceCall) -> None:
@@ -63,24 +67,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if "target_soc" in call.data:
             target_soc = call.data["target_soc"]
 
-        await hass.async_add_executor_job(
-            set_target_soc,
-            vin,
-            api,
-            target_soc,
-        )
+        if (
+            await hass.async_add_executor_job(
+                set_target_soc,
+                vin,
+                api,
+                target_soc,
+            )
+            is False
+        ):
+            _LOGGER.error("Cannot send target soc request to car")
 
     @callback
     async def volkswagen_id_set_ac_charge_speed(call: ServiceCall) -> None:
 
         vin = call.data["vin"]
         if "maximum_reduced" in call.data:
-            await hass.async_add_executor_job(
-                set_ac_charging_speed,
-                vin,
-                api,
-                call.data["maximum_reduced"],
-            )
+            if (
+                await hass.async_add_executor_job(
+                    set_ac_charging_speed,
+                    vin,
+                    api,
+                    call.data["maximum_reduced"],
+                )
+                is False
+            ):
+                _LOGGER.error("Cannot send ac speed request to car")
 
     # Register our services with Home Assistant.
     hass.services.async_register(
@@ -115,10 +127,7 @@ def set_ac_charging_speed(
                     ].maxChargeCurrentAC.value = charging_speed
                     _LOGGER.info("Sended charging speed call to the car")
                 except Exception as exc:
-                    _LOGGER.error(
-                        exc.args[0]
-                        + " - Restart/start the car to reset the rate_limit."
-                    )
+                    _LOGGER.error("Failed to send request to car - %s", exc)
                     return False
 
     return True
@@ -140,10 +149,7 @@ def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> 
                     ].targetSOC_pct.value = target_soc
                     _LOGGER.info("Sended target SoC call to the car")
                 except Exception as exc:
-                    _LOGGER.error(
-                        exc.args[0]
-                        + " - Restart/start the car to reset the rate_limit."
-                    )
+                    _LOGGER.error("Failed to send request to car - %s", exc)
                     return False
     return True
 
@@ -169,10 +175,7 @@ def set_climatisation(
                     ].targetTemperature_C.value = target_temperature
                     _LOGGER.info("Sended target temperature call to the car")
                 except Exception as exc:
-                    _LOGGER.error(
-                        exc.args[0]
-                        + " - Restart/start the car to reset the rate_limit."
-                    )
+                    _LOGGER.error("Failed to send request to car - %s", exc)
                     return False
 
             if operation == "start":
@@ -186,10 +189,7 @@ def set_climatisation(
                         )
                         _LOGGER.info("Sended start climate call to the car")
                 except Exception as exc:
-                    _LOGGER.error(
-                        exc.args[0]
-                        + " - Restart/start the car to reset the rate_limit."
-                    )
+                    _LOGGER.error("Failed to send request to car - %s", exc)
                     return False
 
             if operation == "stop":
@@ -203,10 +203,7 @@ def set_climatisation(
                         )
                         _LOGGER.info("Sended stop climate call to the car")
                 except Exception as exc:
-                    _LOGGER.error(
-                        exc.args[0]
-                        + " - Restart/start the car to reset the rate_limit."
-                    )
+                    _LOGGER.error("Failed to send request to car - %s", exc)
                     return False
     return True
 
