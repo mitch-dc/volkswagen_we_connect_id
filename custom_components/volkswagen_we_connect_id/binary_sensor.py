@@ -8,6 +8,7 @@ import logging
 from weconnect import weconnect
 from weconnect.elements.plug_status import PlugStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
+from weconnect.elements.charging_settings import ChargingSettings
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -73,6 +74,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         key="autoUnlockPlugWhenCharged",
         name="Auto Unlock Plug When Charged",
         local_address="/charging/chargingSettings/autoUnlockPlugWhenCharged",
+        on_value=ChargingSettings.UnlockPlugState,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugConnectionState",
