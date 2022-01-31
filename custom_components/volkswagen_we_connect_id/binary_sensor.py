@@ -88,7 +88,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Plug Lock State",
         local_address="/charging/plugStatus/plugLockState",
         device_class=BinarySensorDeviceClass.LOCK,
-        on_value=PlugStatus.PlugLockState.LOCKED,
+        on_value=PlugStatus.PlugLockState.UNLOCKED,
     ),
 )
 
