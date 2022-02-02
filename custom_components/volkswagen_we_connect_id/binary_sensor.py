@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Binary_sensor integration."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,19 +6,18 @@ from datetime import timedelta
 import logging
 
 from weconnect import weconnect
+from weconnect.elements.charging_settings import ChargingSettings
 from weconnect.elements.plug_status import PlugStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
-from weconnect.elements.charging_settings import ChargingSettings
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import VolkswagenIDBaseEntity
+from . import VolkswagenIDBaseEntity, get_object_value
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class VolkswagenIdBinaryEntityDescription(BinarySensorEntityDescription):
     """Describes Volkswagen ID binary sensor entity."""
 
     local_address: str | None = None
-    on_value: None = None
+    on_value: object | None = None
 
 
 SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
@@ -88,7 +87,23 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Plug Lock State",
         local_address="/charging/plugStatus/plugLockState",
         device_class=BinarySensorDeviceClass.LOCK,
-        on_value=PlugStatus.PlugLockState.LOCKED,
+        on_value=PlugStatus.PlugLockState.UNLOCKED,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Insufficient Battery Level Warning",
+        key="insufficientBatteryLevelWarning",
+        local_address="/readiness/readinessStatus/connectionWarning/insufficientBatteryLevelWarning",
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Car Is Online",
+        key="isOnline",
+        local_address="/readiness/readinessStatus/connectionState/isOnline",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Car Is Active",
+        key="isActive",
+        local_address="/readiness/readinessStatus/connectionState/isActive",
     ),
 )
 
@@ -117,6 +132,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in SENSORS:
             entities.append(
                 VolkswagenIDSensor(
+                    vin,
                     vehicle,
                     sensor,
                     we_connect,
@@ -134,6 +150,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        vin,
         vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdBinaryEntityDescription,
         we_connect: weconnect.WeConnect,
@@ -145,19 +162,16 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         self.entity_description = sensor
         self._coordinator = coordinator
         self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
-        self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
-        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
+        self._attr_unique_id = f"{vin}-{sensor.key}"
+        self._data = f"/vehicles/{vin}/domains{sensor.local_address}"
 
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
 
         state = self._we_connect.getByAddressString(self._data)
+        if isinstance(state.value, bool):
+            return state.value
 
-        while hasattr(state, "value"):
-            state = state.value
-
-        if type(state) is bool:
-            return state
-
-        return state == self.entity_description.on_value.value
+        state = get_object_value(state)
+        return state == get_object_value(self.entity_description.on_value)

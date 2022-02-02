@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Sensor integration."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,11 +21,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_MINUTES,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import VolkswagenIDBaseEntity
+from . import VolkswagenIDBaseEntity, get_object_value
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +102,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     ),
     VolkswagenIdEntityDescription(
         key="maxChargeCurrentAC",
-        name="Charge Current AC",
+        name="Max Charge Current AC",
         local_address="/charging/chargingSettings/maxChargeCurrentAC",
     ),
     VolkswagenIdEntityDescription(
@@ -125,6 +124,11 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="cruisingRangeElectric_km",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         local_address="/charging/batteryStatus/cruisingRangeElectric_km",
+    ),
+    VolkswagenIdEntityDescription(
+        name="Battery Power Level",
+        key="batteryPowerLevel",
+        local_address="/readiness/readinessStatus/connectionState/batteryPowerLevel",
     ),
 )
 
@@ -153,6 +157,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in SENSORS:
             entities.append(
                 VolkswagenIDSensor(
+                    vin,
                     vehicle,
                     sensor,
                     we_connect,
@@ -170,6 +175,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
 
     def __init__(
         self,
+        vin,
         vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdEntityDescription,
         we_connect: weconnect.WeConnect,
@@ -188,9 +194,5 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = self._we_connect.getByAddressString(self._data)
-
-        while hasattr(state, "value"):
-            state = state.value
-
+        state = get_object_value(self._we_connect.getByAddressString(self._data))
         return cast(StateType, state)

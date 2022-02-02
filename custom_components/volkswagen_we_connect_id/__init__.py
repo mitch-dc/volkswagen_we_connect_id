@@ -6,13 +6,12 @@ from typing import Any
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
-from weconnect.elements.vehicle import Vehicle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -32,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         loginOnInit=False,
     )
 
+    await hass.async_add_executor_job(api.login)
     await hass.async_add_executor_job(api.update)
 
     hass.data[DOMAIN][entry.entry_id] = api
@@ -109,12 +109,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def set_ac_charging_speed(
-    callDataVIN, api: weconnect.WeConnect, charging_speed: float
+    call_data_vin, api: weconnect.WeConnect, charging_speed
 ) -> bool:
     """Set charging speed in your volkswagen."""
 
     for vin, vehicle in api.vehicles.items():
-        if vin == callDataVIN:
+        if vin == call_data_vin:
             if (
                 charging_speed
                 != vehicle.domains["charging"][
@@ -133,11 +133,11 @@ def set_ac_charging_speed(
     return True
 
 
-def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> bool:
+def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: float) -> bool:
     """Set target SOC in your volkswagen."""
 
     for vin, vehicle in api.vehicles.items():
-        if vin == callDataVIN:
+        if vin == call_data_vin:
             if (
                 target_soc > 10
                 and target_soc
@@ -155,12 +155,12 @@ def set_target_soc(callDataVIN, api: weconnect.WeConnect, target_soc: float) -> 
 
 
 def set_climatisation(
-    callDataVIN, api: weconnect.WeConnect, operation: str, target_temperature: float
+    call_data_vin, api: weconnect.WeConnect, operation: str, target_temperature: float
 ) -> bool:
     """Set climate in your volkswagen."""
 
     for vin, vehicle in api.vehicles.items():
-        if vin == callDataVIN:
+        if vin == call_data_vin:
 
             if (
                 target_temperature > 10
@@ -218,6 +218,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+def get_object_value(value):
+    """Get value from object or enum."""
+
+    while hasattr(value, "value"):
+        value = value.value
+
+    return value
+
+
 class VolkswagenIDBaseEntity(Entity):
     """Common base for VolkswagenID entities."""
 
@@ -229,7 +238,7 @@ class VolkswagenIDBaseEntity(Entity):
         vehicle: weconnect.Vehicle,
         data,
         we_connect: weconnect.WeConnect,
-        coordinator: CoordinatorEntity,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize sensor."""
         self._data = data
