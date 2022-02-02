@@ -25,12 +25,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """Validate the user input allows us to connect."""
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    weConnect = weconnect.WeConnect(
+    we_connect = weconnect.WeConnect(
         username=data["username"],
         password=data["password"],
         updateAfterLogin=False,
@@ -39,12 +36,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # TODO: ADD Validation on credentials
 
-    await hass.async_add_executor_job(weConnect.login)
-    await hass.async_add_executor_job(weConnect.update)
+    await hass.async_add_executor_job(we_connect.login)
+    await hass.async_add_executor_job(we_connect.update)
 
-    vin = next(iter(weConnect.vehicles.items()))[0]
+    # vin = next(iter(we_connect.vehicles.items()))[0]
 
-    return {"title": "Volkswagen We Connect ID - " + vin}
+    return {"title": "Volkswagen We Connect ID"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

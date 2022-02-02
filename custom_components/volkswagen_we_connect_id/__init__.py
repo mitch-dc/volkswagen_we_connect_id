@@ -6,6 +6,7 @@ from typing import Any
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
+from weconnect.elements.range_status import RangeStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -24,18 +25,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen We Connect ID from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    api = weconnect.WeConnect(
+    _we_connect = weconnect.WeConnect(
         username=entry.data["username"],
         password=entry.data["password"],
         updateAfterLogin=False,
         loginOnInit=False,
     )
 
-    await hass.async_add_executor_job(api.login)
-    await hass.async_add_executor_job(api.update)
+    await hass.async_add_executor_job(_we_connect.login)
+    await hass.async_add_executor_job(_we_connect.update)
 
-    hass.data[DOMAIN][entry.entry_id] = api
-    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = api.vehicles
+    vehicles = []
+
+    for vin, vehicle in _we_connect.vehicles.items():
+        car_type = _we_connect.getByAddressString(
+            f"/vehicles/{vin}/domains/fuelStatus/rangeStatus/carType"
+        )
+        # car_type = get_object_value(car_type)
+        if car_type.value == RangeStatus.CarType.ELECTRIC:
+            vehicles.append(vehicle)
+
+    hass.data[DOMAIN][entry.entry_id] = _we_connect
+    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -51,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(
                 set_climatisation,
                 vin,
-                api,
+                _we_connect,
                 start_stop,
                 target_temperature,
             )
@@ -71,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(
                 set_target_soc,
                 vin,
-                api,
+                _we_connect,
                 target_soc,
             )
             is False
@@ -87,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.async_add_executor_job(
                     set_ac_charging_speed,
                     vin,
-                    api,
+                    _we_connect,
                     call.data["maximum_reduced"],
                 )
                 is False

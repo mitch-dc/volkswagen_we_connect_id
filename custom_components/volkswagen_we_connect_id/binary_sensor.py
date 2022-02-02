@@ -128,11 +128,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     entities: list[VolkswagenIDSensor] = []
-    for vin, vehicle in vehicles.items():
+    for vehicle in vehicles:
         for sensor in SENSORS:
             entities.append(
                 VolkswagenIDSensor(
-                    vin,
                     vehicle,
                     sensor,
                     we_connect,
@@ -150,7 +149,6 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        vin,
         vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdBinaryEntityDescription,
         we_connect: weconnect.WeConnect,
@@ -162,8 +160,8 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         self.entity_description = sensor
         self._coordinator = coordinator
         self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
-        self._attr_unique_id = f"{vin}-{sensor.key}"
-        self._data = f"/vehicles/{vin}/domains{sensor.local_address}"
+        self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
+        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
 
     @property
     def is_on(self) -> bool:

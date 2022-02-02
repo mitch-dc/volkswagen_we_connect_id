@@ -153,11 +153,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     entities: list[VolkswagenIDSensor] = []
-    for vin, vehicle in vehicles.items():
+    for vehicle in vehicles:
         for sensor in SENSORS:
             entities.append(
                 VolkswagenIDSensor(
-                    vin,
                     vehicle,
                     sensor,
                     we_connect,
@@ -175,7 +174,6 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        vin,
         vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdEntityDescription,
         we_connect: weconnect.WeConnect,

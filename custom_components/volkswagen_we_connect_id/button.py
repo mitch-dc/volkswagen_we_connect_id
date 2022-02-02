@@ -15,9 +15,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
 
     entities = []
-    for vin, vehicle in vehicles.items():  # weConnect.vehicles.items():
-        entities.append(VolkswagenIDStartClimateButton(vin, vehicle, we_connect))
-        entities.append(VolkswagenIDToggleACChargeSpeed(vin, vehicle, we_connect))
+    for vehicle in vehicles:  # weConnect.vehicles.items():
+        entities.append(VolkswagenIDStartClimateButton(vehicle, we_connect))
+        entities.append(VolkswagenIDToggleACChargeSpeed(vehicle, we_connect))
 
     async_add_entities(entities)
 
@@ -27,10 +27,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class VolkswagenIDStartClimateButton(ButtonEntity):
     """Button for starting climate."""
 
-    def __init__(self, vin, vehicle, we_connect) -> None:
+    def __init__(self, vehicle, we_connect) -> None:
         """Initialize VolkswagenID vehicle sensor."""
         self._attr_name = f"Volkswagen ID {vehicle.nickname} Start Climate"
-        self._attr_unique_id = f"{vin}-start_climate"
+        self._attr_unique_id = f"{vehicle.vin}-start_climate"
         self._we_connect = we_connect
         self._vehicle = vehicle
 
@@ -42,10 +42,10 @@ class VolkswagenIDStartClimateButton(ButtonEntity):
 class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
     """Button for toggling the charge speed."""
 
-    def __init__(self, vin, vehicle: Vehicle, we_connect: weconnect.WeConnect) -> None:
+    def __init__(self, vehicle: Vehicle, we_connect: weconnect.WeConnect) -> None:
         """Initialize VolkswagenID vehicle sensor."""
         self._attr_name = f"Volkswagen ID {vehicle.nickname} Toggle AC Charge Speed"
-        self._attr_unique_id = f"{vin}-toggle_ac_charge_speed"
+        self._attr_unique_id = f"{vehicle.vin}-toggle_ac_charge_speed"
         self._we_connect = we_connect
         self._vehicle = vehicle
 
