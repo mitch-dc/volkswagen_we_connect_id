@@ -1,9 +1,8 @@
 """Sensor integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-import logging
 from typing import cast
 
 from weconnect import weconnect
@@ -27,108 +26,124 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import VolkswagenIDBaseEntity, get_object_value
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class VolkswagenIdEntityDescription(SensorEntityDescription):
     """Describes Volkswagen ID sensor entity."""
 
-    local_address: str | None = None
+    value: Callable = lambda x, y: x
 
 
 SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="climatisationState",
         name="Climatisation State",
-        local_address="/climatisation/climatisationStatus/climatisationState",
+        value=lambda data: data["climatisation"][
+            "climatisationStatus"
+        ].climatisationState.value,
     ),
     VolkswagenIdEntityDescription(
         key="remainingClimatisationTime_min",
         name="Remaining Climatisation Time",
         native_unit_of_measurement=TIME_MINUTES,
-        local_address="/climatisation/climatisationStatus/remainingClimatisationTime_min",
+        value=lambda data: data["climatisation"][
+            "climatisationStatus"
+        ].remainingClimatisationTime_min.value,
     ),
     VolkswagenIdEntityDescription(
         key="targetTemperature_C",
         name="Target Temperature C",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        local_address="/climatisation/climatisationSettings/targetTemperature_C",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].targetTemperature_C.value,
     ),
     VolkswagenIdEntityDescription(
         key="targetTemperature_F",
         name="Target Temperature F",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
-        local_address="/climatisation/climatisationSettings/targetTemperature_F",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].targetTemperature_F.value,
     ),
     VolkswagenIdEntityDescription(
         key="unitInCar",
         name="Unit In car",
-        local_address="/climatisation/climatisationSettings/unitInCar",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].unitInCar.value,
     ),
     VolkswagenIdEntityDescription(
         key="chargingState",
         name="Charging State",
         icon="mdi:ev-station",
-        local_address="/charging/chargingStatus/chargingState",
+        value=lambda data: data["charging"]["chargingStatus"].chargingState.value,
     ),
     VolkswagenIdEntityDescription(
         key="remainingChargingTimeToComplete_min",
         name="Remaining Charging Time",
         native_unit_of_measurement=TIME_MINUTES,
-        local_address="/charging/chargingStatus/remainingChargingTimeToComplete_min",
+        value=lambda data: data["charging"][
+            "chargingStatus"
+        ].remainingChargingTimeToComplete_min.value,
     ),
     VolkswagenIdEntityDescription(
         key="chargeMode",
         name="Charging Mode",
         icon="mdi:ev-station",
-        local_address="/charging/chargingStatus/chargeMode",
+        value=lambda data: data["charging"]["chargingStatus"].chargeMode.value,
     ),
     VolkswagenIdEntityDescription(
         key="chargePower_kW",
         name="Charge Power",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
-        local_address="/charging/chargingStatus/chargePower_kW",
+        value=lambda data: data["charging"]["chargingStatus"].chargePower_kW.value,
     ),
     VolkswagenIdEntityDescription(
         key="chargeRate_kmph",
         name="Charge Rate",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         device_class=DEVICE_CLASS_POWER,
-        local_address="/charging/chargingStatus/chargeRate_kmph",
+        value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
     VolkswagenIdEntityDescription(
         key="maxChargeCurrentAC",
         name="Max Charge Current AC",
-        local_address="/charging/chargingSettings/maxChargeCurrentAC",
+        value=lambda data: data["charging"][
+            "chargingSettings"
+        ].maxChargeCurrentAC.value,
     ),
     VolkswagenIdEntityDescription(
         key="targetSOC_pct",
         name="Target State of Charge",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        local_address="/charging/chargingSettings/targetSOC_pct",
+        value=lambda data: data["charging"]["chargingSettings"].targetSOC_pct.value,
     ),
     VolkswagenIdEntityDescription(
         key="currentSOC_pct",
         name="State of Charge",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        local_address="/charging/batteryStatus/currentSOC_pct",
+        value=lambda data: data["charging"]["batteryStatus"].currentSOC_pct.value,
     ),
     VolkswagenIdEntityDescription(
         name="Range",
         key="cruisingRangeElectric_km",
         native_unit_of_measurement=LENGTH_KILOMETERS,
-        local_address="/charging/batteryStatus/cruisingRangeElectric_km",
+        value=lambda data: data["charging"][
+            "batteryStatus"
+        ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
         name="Battery Power Level",
         key="batteryPowerLevel",
-        local_address="/readiness/readinessStatus/connectionState/batteryPowerLevel",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionState.batteryPowerLevel.value,
     ),
 )
 
@@ -137,32 +152,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
     we_connect: weconnect.WeConnect
     we_connect = hass.data[DOMAIN][config_entry.entry_id]
-    vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id + "_coordinator"]
 
-    async def async_update_data():
-        await hass.async_add_executor_job(we_connect.update)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="volkswagen_we_connect_id_sensors",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=10),
-    )
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
 
     entities: list[VolkswagenIDSensor] = []
-    for vehicle in vehicles:
+
+    for index, vehicle in enumerate(coordinator.data):
         for sensor in SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    we_connect,
-                    coordinator,
-                )
-            )
+            entities.append(VolkswagenIDSensor(sensor, we_connect, coordinator, index))
     if entities:
         async_add_entities(entities)
 
@@ -174,23 +173,23 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdEntityDescription,
         we_connect: weconnect.WeConnect,
         coordinator: DataUpdateCoordinator,
+        index: int,
     ) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        super().__init__(vehicle, sensor, we_connect, coordinator)
+        super().__init__(we_connect, coordinator, index)
 
         self.entity_description = sensor
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
-        self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
+        self._attr_name = f"Volkswagen ID {self.data.nickname} {sensor.name}"
+        self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
         self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
-        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = get_object_value(self._we_connect.getByAddressString(self._data))
+
+        state = get_object_value(self.entity_description.value(self.data.domains))
         return cast(StateType, state)

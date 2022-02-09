@@ -1,11 +1,10 @@
 """Button integration."""
 from weconnect import weconnect
-from weconnect.elements.charging_settings import ChargingSettings
 from weconnect.elements.vehicle import Vehicle
 
 from homeassistant.components.button import ButtonEntity
 
-from . import set_ac_charging_speed, set_climatisation
+from . import get_object_value, set_ac_charging_speed, set_climatisation
 from .const import DOMAIN
 
 
@@ -49,25 +48,22 @@ class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
         self._we_connect = we_connect
         self._vehicle = vehicle
 
-        self._data = f"/vehicles/{vehicle.vin}/domains/charging/chargingSettings/maxChargeCurrentAC"
-
     def press(self) -> None:
         """Handle the button press."""
 
-        current_state = self._we_connect.getByAddressString(self._data)
+        current_state = get_object_value(
+            self._vehicle.domains["charging"]["chargingSettings"].maxChargeCurrentAC
+        )
 
-        while hasattr(current_state, "value"):
-            current_state = current_state.value
-
-        if current_state == ChargingSettings.MaximumChargeCurrent.MAXIMUM.value:
+        if current_state == "maximum":
             set_ac_charging_speed(
                 self._vehicle.vin.value,
                 self._we_connect,
-                ChargingSettings.MaximumChargeCurrent.REDUCED.value,
+                "reduced",
             )
         else:
             set_ac_charging_speed(
                 self._vehicle.vin.value,
                 self._we_connect,
-                ChargingSettings.MaximumChargeCurrent.MAXIMUM.value,
+                "maximum",
             )

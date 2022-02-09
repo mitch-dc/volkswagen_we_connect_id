@@ -1,12 +1,10 @@
 """Binary_sensor integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-import logging
 
 from weconnect import weconnect
-from weconnect.elements.charging_settings import ChargingSettings
 from weconnect.elements.plug_status import PlugStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
 
@@ -20,14 +18,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import VolkswagenIDBaseEntity, get_object_value
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class VolkswagenIdBinaryEntityDescription(BinarySensorEntityDescription):
     """Describes Volkswagen ID binary sensor entity."""
 
-    local_address: str | None = None
+    value: Callable = lambda x, y: x
     on_value: object | None = None
 
 
@@ -35,75 +31,97 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="climatisationWithoutExternalPower",
         name="Climatisation Without External Power",
-        local_address="/climatisation/climatisationSettings/climatisationWithoutExternalPower",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].climatisationWithoutExternalPower.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="climatizationAtUnlock",
         name="Climatisation At Unlock",
-        local_address="/climatisation/climatisationSettings/climatizationAtUnlock",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].climatizationAtUnlock.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontLeftEnabled",
         name="Zone Front Left Enabled",
-        local_address="/climatisation/climatisationSettings/zoneFrontLeftEnabled",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].zoneFrontLeftEnabled.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontRightEnabled",
         name="Zone Front Right Enabled",
-        local_address="/climatisation/climatisationSettings/zoneFrontRightEnabled",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].zoneFrontRightEnabled.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="windowHeatingEnabled",
         name="Window Heating Enabled",
-        local_address="/climatisation/climatisationSettings/windowHeatingEnabled",
+        value=lambda data: data["climatisation"][
+            "climatisationSettings"
+        ].windowHeatingEnabled.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="frontWindowHeatingState",
         name="Front Window Heating State",
-        local_address="/climatisation/windowHeatingStatus/windows/front/windowHeatingState",
+        value=lambda data: data["climatisation"]["windowHeatingStatus"]
+        .windows["front"]
+        .windowHeatingState.value,
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="rearWindowHeatingState",
         name="Rear Window Heating State",
-        local_address="/climatisation/windowHeatingStatus/windows/rear/windowHeatingState",
+        value=lambda data: data["climatisation"]["windowHeatingStatus"]
+        .windows["rear"]
+        .windowHeatingState.value,
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="autoUnlockPlugWhenCharged",
         name="Auto Unlock Plug When Charged",
-        local_address="/charging/chargingSettings/autoUnlockPlugWhenCharged",
-        on_value=ChargingSettings.UnlockPlugState.ON,
+        value=lambda data: data["charging"][
+            "chargingSettings"
+        ].autoUnlockPlugWhenCharged.value,
+        on_value="on",  # ChargingSettings.UnlockPlugState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugConnectionState",
         name="Plug Connection State",
-        local_address="/charging/plugStatus/plugConnectionState",
+        value=lambda data: data["charging"]["plugStatus"].plugConnectionState.value,
         device_class=BinarySensorDeviceClass.PLUG,
         on_value=PlugStatus.PlugConnectionState.CONNECTED,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugLockState",
         name="Plug Lock State",
-        local_address="/charging/plugStatus/plugLockState",
+        value=lambda data: data["charging"]["plugStatus"].plugLockState.value,
         device_class=BinarySensorDeviceClass.LOCK,
         on_value=PlugStatus.PlugLockState.UNLOCKED,
     ),
     VolkswagenIdBinaryEntityDescription(
-        name="Insufficient Battery Level Warning",
         key="insufficientBatteryLevelWarning",
-        local_address="/readiness/readinessStatus/connectionWarning/insufficientBatteryLevelWarning",
+        name="Insufficient Battery Level Warning",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionWarning.insufficientBatteryLevelWarning.value,
     ),
     VolkswagenIdBinaryEntityDescription(
         name="Car Is Online",
         key="isOnline",
-        local_address="/readiness/readinessStatus/connectionState/isOnline",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionState.isOnline.value,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     VolkswagenIdBinaryEntityDescription(
         name="Car Is Active",
         key="isActive",
-        local_address="/readiness/readinessStatus/connectionState/isActive",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionState.isActive.value,
     ),
 )
 
@@ -112,32 +130,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
     we_connect: weconnect.WeConnect
     we_connect = hass.data[DOMAIN][config_entry.entry_id]
-    vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id + "_coordinator"]
 
-    async def async_update_data():
-        await hass.async_add_executor_job(we_connect.update)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="volkswagen_we_connect_id_sensors",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=30),
-    )
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
 
     entities: list[VolkswagenIDSensor] = []
-    for vehicle in vehicles:
+
+    for index, vehicle in enumerate(coordinator.data):
         for sensor in SENSORS:
-            entities.append(
-                VolkswagenIDSensor(
-                    vehicle,
-                    sensor,
-                    we_connect,
-                    coordinator,
-                )
-            )
+            entities.append(VolkswagenIDSensor(sensor, we_connect, coordinator, index))
     if entities:
         async_add_entities(entities)
 
@@ -149,27 +151,26 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        vehicle: weconnect.Vehicle,
         sensor: VolkswagenIdBinaryEntityDescription,
         we_connect: weconnect.WeConnect,
         coordinator: DataUpdateCoordinator,
+        index: int,
     ) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        super().__init__(vehicle, sensor, we_connect, coordinator)
+        super().__init__(we_connect, coordinator, index)
 
         self.entity_description = sensor
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {vehicle.nickname} {sensor.name}"
-        self._attr_unique_id = f"{vehicle.vin}-{sensor.key}"
-        self._data = f"/vehicles/{vehicle.vin}/domains{sensor.local_address}"
+        self._attr_name = f"Volkswagen ID {self.data.nickname} {sensor.name}"
+        self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
 
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
 
-        state = self._we_connect.getByAddressString(self._data)
-        if isinstance(state.value, bool):
-            return state.value
+        state = self.entity_description.value(self.data.domains)
+        if isinstance(state, bool):
+            return state
 
         state = get_object_value(state)
         return state == get_object_value(self.entity_description.on_value)

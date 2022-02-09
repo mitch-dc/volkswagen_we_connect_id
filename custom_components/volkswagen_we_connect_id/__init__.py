@@ -1,8 +1,8 @@
 """The Volkswagen We Connect ID integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
-from typing import Any
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
@@ -11,8 +11,11 @@ from weconnect.elements.range_status import RangeStatus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
@@ -35,18 +38,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(_we_connect.login)
     await hass.async_add_executor_job(_we_connect.update)
 
-    vehicles = []
+    async def async_update_data():
+        """Fetch data from Volkswagen API."""
+        await hass.async_add_executor_job(_we_connect.update)
 
-    for vin, vehicle in _we_connect.vehicles.items():
-        car_type = _we_connect.getByAddressString(
-            f"/vehicles/{vin}/domains/fuelStatus/rangeStatus/carType"
-        )
-        # car_type = get_object_value(car_type)
-        if car_type.value == RangeStatus.CarType.ELECTRIC:
-            vehicles.append(vehicle)
+        vehicles = []
 
+        for vin, vehicle in _we_connect.vehicles.items():
+            car_type = _we_connect.getByAddressString(
+                f"/vehicles/{vin}/domains/fuelStatus/rangeStatus/carType"
+            )
+            # car_type = get_object_value(car_type)
+            if car_type.value == RangeStatus.CarType.ELECTRIC:
+                vehicles.append(vehicle)
+
+        hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
+        return vehicles
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=10),
+    )
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id + "_coordinator"] = coordinator
     hass.data[DOMAIN][entry.entry_id] = _we_connect
-    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
+    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = []
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
+
+    # Setup components
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -229,7 +254,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def get_object_value(value):
+def get_object_value(value) -> str:
     """Get value from object or enum."""
 
     while hasattr(value, "value"):
@@ -238,43 +263,31 @@ def get_object_value(value):
     return value
 
 
-class VolkswagenIDBaseEntity(Entity):
+class VolkswagenIDBaseEntity(CoordinatorEntity):
     """Common base for VolkswagenID entities."""
 
-    _attr_should_poll = False
+    # _attr_should_poll = False
     _attr_attribution = "Data provided by Volkswagen Connect ID"
 
     def __init__(
         self,
-        vehicle: weconnect.Vehicle,
-        data,
         we_connect: weconnect.WeConnect,
         coordinator: DataUpdateCoordinator,
+        index: int,
     ) -> None:
         """Initialize sensor."""
-        self._data = data
-        self._we_connect = we_connect
-        self._vehicle = vehicle
-        self._coordinator = coordinator
-        self._attrs: dict[str, Any] = {
-            "car": f"{self._vehicle.nickname}",
-            "vin": f"{self._vehicle.vin}",
-        }
+        super().__init__(coordinator)
+        self.we_connect = we_connect
+        self.index = index
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"vw{vehicle.vin}")},
+            identifiers={(DOMAIN, f"vw{self.data.vin}")},
             manufacturer="Volkswagen",
-            model=f"{vehicle.model}",  # format because of the ID.3/ID.4 names.
-            name=f"Volkswagen {vehicle.nickname}",
+            model=f"{self.data.model}",  # format because of the ID.3/ID.4 names.
+            name=f"Volkswagen {self.data.nickname}",
         )
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the entity. Only used by the generic entity update service."""
-
-        await self._coordinator.async_request_refresh()
+    @property
+    def data(self):
+        """Shortcut to access coordinator data for the entity."""
+        return self.coordinator.data[self.index]
