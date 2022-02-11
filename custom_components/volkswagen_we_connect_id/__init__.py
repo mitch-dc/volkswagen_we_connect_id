@@ -45,11 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vehicles = []
 
         for vin, vehicle in _we_connect.vehicles.items():
-            car_type = _we_connect.getByAddressString(
-                f"/vehicles/{vin}/domains/fuelStatus/rangeStatus/carType"
+            car_type = get_object_value(
+                vehicle.domains["fuelStatus"]["rangeStatus"].carType
             )
-            # car_type = get_object_value(car_type)
-            if car_type.value == RangeStatus.CarType.ELECTRIC:
+            if car_type == RangeStatus.CarType.ELECTRIC.value:
                 vehicles.append(vehicle)
 
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
