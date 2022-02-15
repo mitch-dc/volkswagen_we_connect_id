@@ -45,11 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vehicles = []
 
         for vin, vehicle in _we_connect.vehicles.items():
-            car_type = get_object_value(
-                vehicle.domains["fuelStatus"]["rangeStatus"].carType
-            )
-            if car_type == RangeStatus.CarType.ELECTRIC.value:
-                vehicles.append(vehicle)
+            try:
+                car_type = get_object_value(
+                    vehicle.domains["fuelStatus"]["rangeStatus"].carType
+                )
+                if car_type == RangeStatus.CarType.ELECTRIC.value:
+                    vehicles.append(vehicle)
+            except Exception as fail:
+                # This will not add cars that don't have 'fuelStatus' in their domains
+                pass
 
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
         return vehicles
