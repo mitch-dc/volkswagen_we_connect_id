@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,8 +168,10 @@ def set_ac_charging_speed(
     return True
 
 
-def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: float) -> bool:
+def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: int) -> bool:
     """Set target SOC in your volkswagen."""
+
+    target_soc = int(target_soc)
 
     for vin, vehicle in api.vehicles.items():
         if vin == call_data_vin:
