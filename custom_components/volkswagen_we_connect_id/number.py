@@ -117,5 +117,5 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
         """Update the current value."""
         if value > 10:
             await self.hass.async_add_executor_job(
-                set_climatisation, self.data.vin.value, self._we_connect, "start", value
+                set_climatisation, self.data.vin.value, self._we_connect, "none", value
             )
