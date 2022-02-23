@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +69,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Setup components
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    @callback
+    async def volkswagen_id_start_stop_charging(call: ServiceCall) -> None:
+
+        vin = call.data["vin"]
+        start_stop = call.data["start_stop"]
+
+        if (
+            await hass.async_add_executor_job(
+                start_stop_charging,
+                vin,
+                _we_connect,
+                start_stop,
+            )
+            is False
+        ):
+            _LOGGER.error("Cannot send charging request to car")
 
     @callback
     async def volkswagen_id_set_climatisation(call: ServiceCall) -> None:
@@ -128,6 +145,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register our services with Home Assistant.
     hass.services.async_register(
+        DOMAIN, "volkswagen_id_start_stop_charging", volkswagen_id_start_stop_charging
+    )
+
+    hass.services.async_register(
         DOMAIN, "volkswagen_id_set_climatisation", volkswagen_id_set_climatisation
     )
     hass.services.async_register(
@@ -137,6 +158,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, "volkswagen_id_set_ac_charge_speed", volkswagen_id_set_ac_charge_speed
     )
 
+    return True
+
+
+def start_stop_charging(
+    call_data_vin, api: weconnect.WeConnect, operation: str
+) -> bool:
+    """Start of stop charging of your volkswagen."""
+
+    for vin, vehicle in api.vehicles.items():
+        if vin == call_data_vin:
+
+            if operation == "start":
+                try:
+                    if (
+                        vehicle.controls.chargingControl is not None
+                        and vehicle.controls.chargingControl.enabled
+                    ):
+                        vehicle.controls.chargingControl.value = ControlOperation.START
+                        _LOGGER.info("Sended start charging call to the car")
+                except Exception as exc:
+                    _LOGGER.error("Failed to send request to car - %s", exc)
+                    return False
+
+            if operation == "stop":
+                try:
+                    if (
+                        vehicle.controls.chargingControl is not None
+                        and vehicle.controls.chargingControl.enabled
+                    ):
+                        vehicle.controls.chargingControl.value = ControlOperation.STOP
+                        _LOGGER.info("Sended stop charging call to the car")
+                except Exception as exc:
+                    _LOGGER.error("Failed to send request to car - %s", exc)
+                    return False
     return True
 
 
@@ -165,8 +220,10 @@ def set_ac_charging_speed(
     return True
 
 
-def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: float) -> bool:
+def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: int) -> bool:
     """Set target SOC in your volkswagen."""
+
+    target_soc = int(target_soc)
 
     for vin, vehicle in api.vehicles.items():
         if vin == call_data_vin:
@@ -280,7 +337,7 @@ class VolkswagenIDBaseEntity(CoordinatorEntity):
             identifiers={(DOMAIN, f"vw{self.data.vin}")},
             manufacturer="Volkswagen",
             model=f"{self.data.model}",  # format because of the ID.3/ID.4 names.
-            name=f"Volkswagen {self.data.nickname}",
+            name=f"Volkswagen {self.data.nickname} ({self.data.vin})",
         )
 
     @property

@@ -110,6 +110,16 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
     VolkswagenIdEntityDescription(
+        key="chargingSettings",
+        name="Charging Settings",
+        value=lambda data: data["charging"]["chargingStatus"].chargingSettings.value,
+    ),
+    VolkswagenIdEntityDescription(
+        key="chargeType",
+        name="Charge Type",
+        value=lambda data: data["charging"]["chargingStatus"].chargeType.value,
+    ),
+    VolkswagenIdEntityDescription(
         key="maxChargeCurrentAC",
         name="Max Charge Current AC",
         value=lambda data: data["charging"][

@@ -1,3 +1,24 @@
+volkswagen_id_start_stop_charging:
+  name: Volkswagen ID Start or Stop Charging
+  description: Starts or stops charging of Volkswagen ID cars.
+  fields:
+    vin:
+      name: VIN
+      description: Vehicle identification number for the car.
+      required: true
+      example: WVGZZZA1ZMP001337
+      selector:
+        text:
+    start_stop:
+      name: Start or Stop
+      description: Starts or stops charging.
+      required: true
+      selector:
+        select:
+          options:
+            - "start"
+            - "stop"
+
 volkswagen_id_set_climatisation:
   name: Volkswagen ID Set Climatisation
   description: Sets climatisation in Volkswagen ID cars.

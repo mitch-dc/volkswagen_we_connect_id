@@ -37,5 +37,10 @@ custom_components/volkswagen_we_connect_id/sensor.py
 ##  Configuration 
 
 It's important that you first use the app, connect the app to the car and use it at least once. 
-After that enable the integration on the integration page in Home Assistant with your e-mail and password that you use to login into the app. Wait a couple of seconds and 1 device (the car) with entities will show up. 
+After that enable the integration on the integration page in Home Assistant with your e-mail and password that you use to login into the app. Wait a couple of seconds and 1 or more devices (your cars) with entities will show up. 
+
+## Tested Cars
+
+* Volkswagen ID.3
+* Volkswagen ID.4
 
