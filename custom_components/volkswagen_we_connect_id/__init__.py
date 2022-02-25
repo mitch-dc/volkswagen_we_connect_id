@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from tarfile import SUPPORTED_TYPES
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
@@ -22,6 +23,8 @@ from .const import DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER]
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,10 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vehicles = []
 
         for vin, vehicle in _we_connect.vehicles.items():
-            car_type = get_object_value(
-                vehicle.domains["fuelStatus"]["rangeStatus"].carType
-            )
-            if car_type == RangeStatus.CarType.ELECTRIC.value:
+            if vehicle.model.value in SUPPORTED_VEHICLES:
                 vehicles.append(vehicle)
 
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=30),
     )
 
     hass.data.setdefault(DOMAIN, {})
@@ -264,7 +264,7 @@ def set_climatisation(
                 try:
                     vehicle.domains["climatisation"][
                         "climatisationSettings"
-                    ].targetTemperature_C.value = target_temperature
+                    ].targetTemperature_C.value = float(target_temperature)
                     _LOGGER.info("Sended target temperature call to the car")
                 except Exception as exc:
                     _LOGGER.error("Failed to send request to car - %s", exc)

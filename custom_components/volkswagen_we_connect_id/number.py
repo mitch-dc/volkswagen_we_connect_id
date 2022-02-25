@@ -104,18 +104,16 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
     @property
     def value(self) -> float:
         """Return the current value."""
+        targetTemp = self.data.domains["climatisation"][
+            "climatisationSettings"
+        ].targetTemperature_C.value
 
-        return float(
-            get_object_value(
-                self.data.domains["climatisation"][
-                    "climatisationSettings"
-                ].targetTemperature_C.value,
-            )
-        )
+        return float(targetTemp)
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
         if value > 10:
+            self._attr_value = value
             await self.hass.async_add_executor_job(
-                set_climatisation, self.data.vin.value, self._we_connect, "start", value
+                set_climatisation, self.data.vin.value, self._we_connect, "none", value
             )
