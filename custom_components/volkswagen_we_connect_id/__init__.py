@@ -35,15 +35,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=entry.data["username"],
         password=entry.data["password"],
         updateAfterLogin=False,
+        updatePictures=False,
         loginOnInit=False,
     )
 
+    def we_connect_update() -> None:
+        _we_connect.update(
+            updatePictures=False
+        )
+
     await hass.async_add_executor_job(_we_connect.login)
-    await hass.async_add_executor_job(_we_connect.update)
+    await hass.async_add_executor_job(we_connect_update)
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-        await hass.async_add_executor_job(_we_connect.update)
+        await hass.async_add_executor_job(we_connect_update)
 
         vehicles = []
 
