@@ -28,7 +28,7 @@ class VolkswagenIDStartClimateButton(ButtonEntity):
 
     def __init__(self, vehicle, we_connect) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"Volkswagen ID {vehicle.nickname} Start Climate"
+        self._attr_name = f"{vehicle.nickname} Start Climate"
         self._attr_unique_id = f"{vehicle.vin}-start_climate"
         self._we_connect = we_connect
         self._vehicle = vehicle
@@ -43,7 +43,7 @@ class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
 
     def __init__(self, vehicle: Vehicle, we_connect: weconnect.WeConnect) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"Volkswagen ID {vehicle.nickname} Toggle AC Charge Speed"
+        self._attr_name = f"{vehicle.nickname} Toggle AC Charge Speed"
         self._attr_unique_id = f"{vehicle.vin}-toggle_ac_charge_speed"
         self._we_connect = we_connect
         self._vehicle = vehicle

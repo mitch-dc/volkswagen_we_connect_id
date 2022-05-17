@@ -49,7 +49,7 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         super().__init__(we_connect, coordinator, index)
 
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {self.data.nickname} Target State Of Charge"
+        self._attr_name = f"{self.data.nickname} Target State Of Charge"
         self._attr_unique_id = f"{self.data.vin}-target_state_of_charge"
         self._we_connect = we_connect
         self._attr_min_value = 10
@@ -92,9 +92,7 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
         super().__init__(we_connect, coordinator, index)
 
         self._coordinator = coordinator
-        self._attr_name = (
-            f"Volkswagen ID {self.data.nickname} Target Climate Temperature"
-        )
+        self._attr_name = f"{self.data.nickname} Target Climate Temperature"
         self._attr_unique_id = f"{self.data.vin}-target_climate_temperature"
         self._we_connect = we_connect
         self._attr_min_value = 10

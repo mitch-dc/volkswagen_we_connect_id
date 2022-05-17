@@ -13,6 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
     PERCENTAGE,
     POWER_KILO_WATT,
     SPEED_KILOMETERS_PER_HOUR,
@@ -141,9 +142,17 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"]["batteryStatus"].currentSOC_pct.value,
     ),
     VolkswagenIdEntityDescription(
-        name="Range",
+        name="Range in Kilometers",
         key="cruisingRangeElectric_km",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        value=lambda data: data["charging"][
+            "batteryStatus"
+        ].cruisingRangeElectric_km.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Range in Miles",
+        key="cruisingRangeElectric_mi",
+        native_unit_of_measurement=LENGTH_MILES,
         value=lambda data: data["charging"][
             "batteryStatus"
         ].cruisingRangeElectric_km.value,
@@ -193,7 +202,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
 
         self.entity_description = sensor
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {self.data.nickname} {sensor.name}"
+        self._attr_name = f"{self.data.nickname} {sensor.name}"
         self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
         self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
 
@@ -202,4 +211,8 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         """Return the state."""
 
         state = get_object_value(self.entity_description.value(self.data.domains))
+
+        if self.entity_description.key == "cruisingRangeElectric_mi":
+            state = int(float(state) * 0.62137)
+
         return cast(StateType, state)

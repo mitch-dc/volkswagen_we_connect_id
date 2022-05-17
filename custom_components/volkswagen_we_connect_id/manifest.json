@@ -3,12 +3,12 @@
   "name": "Volkswagen We Connect ID",
   "config_flow": true,
   "documentation": "https://github.com/mitch-dc/volkswagen_we_connect_id",
-  "requirements": ["weconnect==0.39", "ascii_magic==1.6"],
+  "requirements": ["weconnect==0.40", "ascii_magic==1.6"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@mitch-dc"],
   "iot_class": "cloud_polling",
-  "version": "0.3.2"
+  "version": "0.4"
 }

@@ -161,7 +161,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
 
         self.entity_description = sensor
         self._coordinator = coordinator
-        self._attr_name = f"Volkswagen ID {self.data.nickname} {sensor.name}"
+        self._attr_name = f"{self.data.nickname} {sensor.name}"
         self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
 
     @property

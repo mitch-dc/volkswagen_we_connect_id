@@ -3,11 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from tarfile import SUPPORTED_TYPES
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
-from weconnect.elements.range_status import RangeStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -35,21 +33,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=entry.data["username"],
         password=entry.data["password"],
         updateAfterLogin=False,
-        updatePictures=False,
         loginOnInit=False,
     )
 
-    def we_connect_update() -> None:
-        _we_connect.update(
-            updatePictures=False
-        )
-
     await hass.async_add_executor_job(_we_connect.login)
-    await hass.async_add_executor_job(we_connect_update)
+    await hass.async_add_executor_job(_we_connect.update)
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-        await hass.async_add_executor_job(we_connect_update)
+        await hass.async_add_executor_job(_we_connect.update)
 
         vehicles = []
 
