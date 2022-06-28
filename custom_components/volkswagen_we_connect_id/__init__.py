@@ -41,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
+        _LOGGER.info("Fetching data from VW API...")
         await hass.async_add_executor_job(_we_connect.update)
 
         vehicles = []
@@ -50,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 vehicles.append(vehicle)
 
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
+        _LOGGER.info("Data retrieved")
         return vehicles
 
     coordinator = DataUpdateCoordinator(
