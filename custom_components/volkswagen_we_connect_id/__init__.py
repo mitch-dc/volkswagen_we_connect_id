@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data["password"],
         updateAfterLogin=False,
         loginOnInit=False,
+        timeout=10
     )
 
     await hass.async_add_executor_job(_we_connect.login)
