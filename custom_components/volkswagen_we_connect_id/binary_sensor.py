@@ -101,28 +101,6 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
         on_value=PlugStatus.PlugLockState.UNLOCKED,
     ),
-    VolkswagenIdBinaryEntityDescription(
-        key="insufficientBatteryLevelWarning",
-        name="Insufficient Battery Level Warning",
-        value=lambda data: data["readiness"][
-            "readinessStatus"
-        ].connectionWarning.insufficientBatteryLevelWarning.value,
-    ),
-    VolkswagenIdBinaryEntityDescription(
-        name="Car Is Online",
-        key="isOnline",
-        value=lambda data: data["readiness"][
-            "readinessStatus"
-        ].connectionState.isOnline.value,
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    ),
-    VolkswagenIdBinaryEntityDescription(
-        name="Car Is Active",
-        key="isActive",
-        value=lambda data: data["readiness"][
-            "readinessStatus"
-        ].connectionState.isActive.value,
-    ),
 )
 
 

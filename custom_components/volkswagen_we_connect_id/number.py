@@ -15,6 +15,7 @@ from . import (
 )
 from .const import DOMAIN
 
+from homeassistant.const import TEMP_CELSIUS
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add buttons for passed config_entry in HA."""
@@ -52,9 +53,9 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._attr_name = f"{self.data.nickname} Target State Of Charge"
         self._attr_unique_id = f"{self.data.vin}-target_state_of_charge"
         self._we_connect = we_connect
-        self._attr_min_value = 10
-        self._attr_max_value = 100
-        self._attr_step = 10
+        self._native_min_value = 10
+        self._native_max_value = 100
+        self._native_step = 10
 
     @property
     def value(self) -> int:
@@ -66,7 +67,7 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
             )
         )
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         if value > 10:
             await self.hass.async_add_executor_job(
@@ -95,9 +96,10 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._attr_name = f"{self.data.nickname} Target Climate Temperature"
         self._attr_unique_id = f"{self.data.vin}-target_climate_temperature"
         self._we_connect = we_connect
-        self._attr_min_value = 10
-        self._attr_max_value = 30
-        self._attr_step = 0.5
+        self._native_max_value = 10
+        self._native_min_value = 30
+        self._native_step = 0.5
+        self._native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def value(self) -> float:
@@ -108,7 +110,7 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
 
         return float(targetTemp)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         if value > 10:
             self._attr_value = value

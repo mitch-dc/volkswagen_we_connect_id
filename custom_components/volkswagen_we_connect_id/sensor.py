@@ -7,7 +7,11 @@ from typing import cast
 
 from weconnect import weconnect
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
@@ -157,13 +161,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
             "batteryStatus"
         ].cruisingRangeElectric_km.value,
     ),
-    VolkswagenIdEntityDescription(
-        name="Battery Power Level",
-        key="batteryPowerLevel",
-        value=lambda data: data["readiness"][
-            "readinessStatus"
-        ].connectionState.batteryPowerLevel.value,
-    ),
 )
 
 
@@ -205,6 +202,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         self._attr_name = f"{self.data.nickname} {sensor.name}"
         self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
         self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> StateType:
