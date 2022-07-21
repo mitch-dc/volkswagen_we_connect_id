@@ -229,7 +229,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         if self.entity_description.key == "cruisingRangeElectric_mi":
             state = int(float(state) * 0.62137)
 
-        if self.entity_description.key == "odometer_mi":
+        if state and self.entity_description.key == "odometer_mi":
             state = int(float(state) * 0.62137)
 
         return cast(StateType, state)
