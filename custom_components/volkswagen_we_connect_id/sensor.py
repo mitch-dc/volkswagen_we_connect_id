@@ -111,7 +111,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="chargeRate_kmph",
         name="Charge Rate",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=DEVICE_CLASS_POWER,
         value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
     VolkswagenIdEntityDescription(
