@@ -58,9 +58,8 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._native_step = 10
 
     @property
-    def value(self) -> int:
-        """Return the current value."""
-
+    def native_value(self) -> float | None:
+        """Return the value reported by the number."""
         return int(
             get_object_value(
                 self.data.domains["charging"]["chargingSettings"].targetSOC_pct.value
@@ -102,8 +101,8 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._native_unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def value(self) -> float:
-        """Return the current value."""
+    def native_value(self) -> float | None:
+        """Return the value reported by the number."""
         targetTemp = self.data.domains["climatisation"][
             "climatisationSettings"
         ].targetTemperature_C.value
