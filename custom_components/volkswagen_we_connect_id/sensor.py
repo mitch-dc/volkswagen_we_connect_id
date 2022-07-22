@@ -23,6 +23,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_DAYS,
     TIME_MINUTES,
 )
 from homeassistant.helpers.typing import StateType
@@ -160,6 +161,14 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"][
             "batteryStatus"
         ].cruisingRangeElectric_km.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Health Inspection",
+        key="inspectionDue",
+        native_unit_of_measurement=TIME_DAYS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].inspectionDue_days.value,
     ),
 )
 
