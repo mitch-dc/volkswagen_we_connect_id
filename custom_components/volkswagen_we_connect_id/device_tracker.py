@@ -56,16 +56,22 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, TrackerEntity):
     @property
     def latitude(self) -> float:
         """Return latitude value of the device."""
-        return get_object_value(
-            self.data.domains["parking"]["parkingPosition"].latitude.value
-        )
+        try:
+            return get_object_value(
+                self.data.domains["parking"]["parkingPosition"].latitude.value
+            )
+        except KeyError:
+            return None
 
     @property
     def longitude(self) -> float:
         """Return longitude value of the device."""
-        return get_object_value(
-            self.data.domains["parking"]["parkingPosition"].longitude.value
-        )
+        try:
+            return get_object_value(
+                self.data.domains["parking"]["parkingPosition"].longitude.value
+            )
+        except KeyError:
+            return None
 
     @property
     def source_type(self):
