@@ -112,7 +112,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="chargeRate_kmph",
         name="Charge Rate",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=DEVICE_CLASS_POWER,
         value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
     VolkswagenIdEntityDescription(
@@ -170,6 +169,22 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
             "maintenanceStatus"
         ].inspectionDue_days.value,
     ),
+    VolkswagenIdEntityDescription(
+        name="Odometer in Kilometers",
+        key="odometer_km",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        value=lambda data: data["measurements"][
+            "odometerStatus"
+        ].odometer.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Odometer in Miles",
+        key="odometer_mi",
+        native_unit_of_measurement=LENGTH_MILES,
+        value=lambda data: data["measurements"][
+            "odometerStatus"
+        ].odometer.value,
+    ),
 )
 
 
@@ -220,6 +235,9 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         state = get_object_value(self.entity_description.value(self.data.domains))
 
         if self.entity_description.key == "cruisingRangeElectric_mi":
+            state = int(float(state) * 0.62137)
+
+        if state and self.entity_description.key == "odometer_mi":
             state = int(float(state) * 0.62137)
 
         return cast(StateType, state)

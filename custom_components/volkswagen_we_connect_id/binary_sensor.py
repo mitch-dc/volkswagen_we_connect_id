@@ -101,6 +101,28 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
         on_value=PlugStatus.PlugLockState.UNLOCKED,
     ),
+    VolkswagenIdBinaryEntityDescription(
+        key="insufficientBatteryLevelWarning",
+        name="Insufficient Battery Level Warning",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionWarning.insufficientBatteryLevelWarning.value,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Car Is Online",
+        key="isOnline",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionState.isOnline.value,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Car Is Active",
+        key="isActive",
+        value=lambda data: data["readiness"][
+            "readinessStatus"
+        ].connectionState.isActive.value,
+    ),
 )
 
 
@@ -145,10 +167,13 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
+        try:
+          state = self.entity_description.value(self.data.domains)
+          if isinstance(state, bool):
+              return state
 
-        state = self.entity_description.value(self.data.domains)
-        if isinstance(state, bool):
-            return state
+          state = get_object_value(state)
+          return state == get_object_value(self.entity_description.on_value)
 
-        state = get_object_value(state)
-        return state == get_object_value(self.entity_description.on_value)
+        except KeyError:
+          return None
