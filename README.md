@@ -44,3 +44,6 @@ After that enable the integration on the integration page in Home Assistant with
 * Volkswagen ID.3
 * Volkswagen ID.4
 
+## Requirements
+
+Home Assistant Core *2022.7.0* or higher

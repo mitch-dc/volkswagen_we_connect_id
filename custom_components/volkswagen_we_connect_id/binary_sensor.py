@@ -167,10 +167,13 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
+        try:
+          state = self.entity_description.value(self.data.domains)
+          if isinstance(state, bool):
+              return state
 
-        state = self.entity_description.value(self.data.domains)
-        if isinstance(state, bool):
-            return state
+          state = get_object_value(state)
+          return state == get_object_value(self.entity_description.on_value)
 
-        state = get_object_value(state)
-        return state == get_object_value(self.entity_description.on_value)
+        except KeyError:
+          return None
