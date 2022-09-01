@@ -7,7 +7,11 @@ from typing import cast
 
 from weconnect import weconnect
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
@@ -19,6 +23,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_DAYS,
     TIME_MINUTES,
 )
 from homeassistant.helpers.typing import StateType
@@ -107,7 +112,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="chargeRate_kmph",
         name="Charge Rate",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        device_class=DEVICE_CLASS_POWER,
         value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
     VolkswagenIdEntityDescription(
@@ -158,11 +162,28 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
-        name="Battery Power Level",
-        key="batteryPowerLevel",
-        value=lambda data: data["readiness"][
-            "readinessStatus"
-        ].connectionState.batteryPowerLevel.value,
+        name="Health Inspection",
+        key="inspectionDue",
+        native_unit_of_measurement=TIME_DAYS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].inspectionDue_days.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Odometer in Kilometers",
+        key="odometer_km",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        value=lambda data: data["measurements"][
+            "odometerStatus"
+        ].odometer.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Odometer in Miles",
+        key="odometer_mi",
+        native_unit_of_measurement=LENGTH_MILES,
+        value=lambda data: data["measurements"][
+            "odometerStatus"
+        ].odometer.value,
     ),
 )
 
@@ -205,6 +226,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         self._attr_name = f"{self.data.nickname} {sensor.name}"
         self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
         self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> StateType:
@@ -213,6 +235,9 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         state = get_object_value(self.entity_description.value(self.data.domains))
 
         if self.entity_description.key == "cruisingRangeElectric_mi":
+            state = int(float(state) * 0.62137)
+
+        if state and self.entity_description.key == "odometer_mi":
             state = int(float(state) * 0.62137)
 
         return cast(StateType, state)
