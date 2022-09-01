@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import asyncio
 
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-        await hass.async_add_executor_job(_we_connect.update)
+        await asyncio.wait_for(hass.async_add_executor_job(_we_connect.update), timeout=15)
 
         vehicles = []
 
