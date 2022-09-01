@@ -38,8 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=10
     )
 
+    _LOGGER.info("tsg21 version")
+
     await hass.async_add_executor_job(_we_connect.login)
     await hass.async_add_executor_job(_we_connect.update)
+
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
