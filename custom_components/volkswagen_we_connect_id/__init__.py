@@ -46,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-        await asyncio.wait_for(hass.async_add_executor_job(_we_connect.update), timeout=30.0)
+       
+        await hass.async_add_executor_job(_we_connect.update)
 
         vehicles = []
 
