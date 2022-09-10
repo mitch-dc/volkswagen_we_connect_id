@@ -46,12 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from Volkswagen API."""
 
         try:
-            before_update = time.time()
+            before_update = time.perf_counter()
             await asyncio.wait_for(
                 hass.async_add_executor_job(_we_connect.update),
                 timeout=120.0
             )
-            update_elapsed = time.time() - before_update
+            update_elapsed = time.perf_counter() - before_update
             if update_elapsed > 10:
                 _LOGGER.info("weconnect update took {update_elapsed:.1f}s")    
 
