@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 import asyncio
 import time
-from turtle import update
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
 
