@@ -4,7 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import asyncio
-
+import time
+from turtle import update
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
 
@@ -37,25 +38,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         loginOnInit=False,
         timeout=10
     )
-
-    _LOGGER.info("tsg21 version")
-
+    
     await hass.async_add_executor_job(_we_connect.login)
     await hass.async_add_executor_job(_we_connect.update)
 
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-       
+
         try:
+            before_update = time()
             await asyncio.wait_for(
                 hass.async_add_executor_job(_we_connect.update),
-                timeout=30.0
+                timeout=120.0
             )
+            update_elapsed = time() - before_update
+            if update_elapsed > 10:
+                _LOGGER.info("weconnect update took {update_elapsed:.1f}s")    
+
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout updating weconnect")
             return
- 
 
         vehicles = []
 
