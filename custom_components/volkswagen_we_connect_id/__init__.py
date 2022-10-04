@@ -52,8 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 timeout=120.0
             )
             update_elapsed = time.perf_counter() - before_update
-            if update_elapsed > 10:
-                _LOGGER.info(F"weconnect update took {update_elapsed:.1f}s")    
+            if update_elapsed > 30:
+                _LOGGER.warn(F"weconnect update took {update_elapsed:.1f}s")    
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout updating weconnect")
