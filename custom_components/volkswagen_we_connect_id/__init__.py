@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-
+import asyncio
+import time
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
 
@@ -36,13 +37,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         loginOnInit=False,
         timeout=10
     )
-
+    
     await hass.async_add_executor_job(_we_connect.login)
     await hass.async_add_executor_job(_we_connect.update)
 
+
     async def async_update_data():
         """Fetch data from Volkswagen API."""
-        await hass.async_add_executor_job(_we_connect.update)
+
+        try:
+            before_update = time.perf_counter()
+            await asyncio.wait_for(
+                hass.async_add_executor_job(_we_connect.update),
+                timeout=120.0
+            )
+            update_elapsed = time.perf_counter() - before_update
+            if update_elapsed > 30:
+                _LOGGER.warn(F"weconnect update took {update_elapsed:.1f}s")    
+
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout updating weconnect")
+            return
 
         vehicles = []
 
