@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from weconnect import weconnect
 from weconnect.elements.plug_status import PlugStatus
+from weconnect.elements.access_status import AccessStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
 
 from homeassistant.components.binary_sensor import (
@@ -122,6 +123,13 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         value=lambda data: data["readiness"][
             "readinessStatus"
         ].connectionState.isActive.value,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        key="overallStatus",
+        name="Overall Status",
+        value=lambda data: data["access"]["accessStatus"].overallStatus.value,
+        device_class=BinarySensorDeviceClass.SAFETY,
+        on_value=AccessStatus.OverallState.UNSAFE,
     ),
 )
 
