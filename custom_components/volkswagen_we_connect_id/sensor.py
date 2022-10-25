@@ -225,8 +225,9 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
         self._coordinator = coordinator
         self._attr_name = f"{self.data.nickname} {sensor.name}"
         self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
-        self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        if sensor.native_unit_of_measurement:
+            self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> StateType:
