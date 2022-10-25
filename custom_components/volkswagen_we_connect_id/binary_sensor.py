@@ -131,6 +131,13 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.SAFETY,
         on_value=AccessStatus.OverallState.UNSAFE,
     ),
+    VolkswagenIdBinaryEntityDescription(
+        key="doorLockStatus",
+        name="Door Lock Status",
+        value=lambda data: data["access"]["accessStatus"].doorLockStatus.value,
+        device_class=BinarySensorDeviceClass.LOCK,
+        on_value=AccessStatus.Door.LockState.UNLOCKED,
+    ),
 )
 
 
