@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
+from .const import DEFAULT_UPDATE_FREQUENCY_SECONDS
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER, Platform.DEVICE_TRACKER]
 
@@ -73,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=entry.data["update_frequency"]),
+        update_interval=timedelta(seconds=entry.data.get("update_frequency", default=DEFAULT_UPDATE_FREQUENCY_SECONDS))
     )
 
     hass.data.setdefault(DOMAIN, {})

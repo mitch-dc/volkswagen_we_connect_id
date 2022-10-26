@@ -22,7 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("username"): str,
         vol.Required("password"): str,
-        vol.Optional("update_frequency", default=DEFAULT_UPDATE_FREQUENCY_SECONDS): vol.Range(min=MINIMUM_UPDATE_FREQUENCY_SECONDS),
+        vol.Optional("update_frequency"): vol.Range(min=MINIMUM_UPDATE_FREQUENCY_SECONDS)
     }
 )
 
