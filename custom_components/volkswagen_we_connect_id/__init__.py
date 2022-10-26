@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
         return vehicles
 
-    update_interval = entry.data.get("update_interval") | DEFAULT_UPDATE_INTERVAL_SECONDS
+    update_interval = entry.data.get("update_interval") or DEFAULT_UPDATE_INTERVAL_SECONDS
 
     coordinator = DataUpdateCoordinator(
         hass,
