@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .const import DEFAULT_UPDATE_INTERVAL_FREQUENCY_SECONDS
+from .const import DEFAULT_UPDATE_INTERVAL_SECONDS
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER, Platform.DEVICE_TRACKER]
 
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
         return vehicles
 
-    update_interval = entry.data.get("update_interval") | DEFAULT_UPDATE_INTERVAL_FREQUENCY_SECONDS
+    update_interval = entry.data.get("update_interval") | DEFAULT_UPDATE_INTERVAL_SECONDS
 
     coordinator = DataUpdateCoordinator(
         hass,
