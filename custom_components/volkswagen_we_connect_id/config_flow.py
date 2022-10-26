@@ -13,7 +13,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .const import DEFAULT_UPDATE_FREQUENCY_SECONDS
 from .const import MINIMUM_UPDATE_FREQUENCY_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
