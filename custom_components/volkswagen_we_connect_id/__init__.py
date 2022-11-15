@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-
+import asyncio
+import time
 from weconnect import weconnect
 from weconnect.elements.control_operation import ControlOperation
 
@@ -18,7 +19,13 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.NUMBER,
+    #    Platform.DEVICE_TRACKER,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data["password"],
         updateAfterLogin=False,
         loginOnInit=False,
-        timeout=10
+        timeout=10,
     )
 
     await hass.async_add_executor_job(_we_connect.login)
@@ -42,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
+
         await hass.async_add_executor_job(_we_connect.update)
 
         vehicles = []
@@ -70,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     async def volkswagen_id_start_stop_charging(call: ServiceCall) -> None:
