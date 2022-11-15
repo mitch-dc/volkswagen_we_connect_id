@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from weconnect import weconnect
 from weconnect.elements.plug_status import PlugStatus
-from weconnect.elements.access_status import AccessStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
 
 from homeassistant.components.binary_sensor import (
@@ -81,14 +80,6 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
-        key="autoUnlockPlugWhenCharged",
-        name="Auto Unlock Plug When Charged",
-        value=lambda data: data["charging"][
-            "chargingSettings"
-        ].autoUnlockPlugWhenCharged.value,
-        on_value="on",  # ChargingSettings.UnlockPlugState.ON,
-    ),
-    VolkswagenIdBinaryEntityDescription(
         key="plugConnectionState",
         name="Plug Connection State",
         value=lambda data: data["charging"]["plugStatus"].plugConnectionState.value,
@@ -123,20 +114,6 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         value=lambda data: data["readiness"][
             "readinessStatus"
         ].connectionState.isActive.value,
-    ),
-    VolkswagenIdBinaryEntityDescription(
-        key="overallStatus",
-        name="Overall Status",
-        value=lambda data: data["access"]["accessStatus"].overallStatus.value,
-        device_class=BinarySensorDeviceClass.SAFETY,
-        on_value=AccessStatus.OverallState.UNSAFE,
-    ),
-    VolkswagenIdBinaryEntityDescription(
-        key="doorLockStatus",
-        name="Door Lock Status",
-        value=lambda data: data["access"]["accessStatus"].doorLockStatus.value,
-        device_class=BinarySensorDeviceClass.LOCK,
-        on_value=AccessStatus.Door.LockState.UNLOCKED,
     ),
 )
 
@@ -183,12 +160,12 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         try:
-          state = self.entity_description.value(self.data.domains)
-          if isinstance(state, bool):
-              return state
+            state = self.entity_description.value(self.data.domains)
+            if isinstance(state, bool):
+                return state
 
-          state = get_object_value(state)
-          return state == get_object_value(self.entity_description.on_value)
+            state = get_object_value(state)
+            return state == get_object_value(self.entity_description.on_value)
 
         except KeyError:
-          return None
+            return None
