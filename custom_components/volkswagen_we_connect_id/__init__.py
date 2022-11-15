@@ -24,7 +24,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.SENSOR,
     Platform.NUMBER,
-    Platform.DEVICE_TRACKER,
+    #    Platform.DEVICE_TRACKER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     async def volkswagen_id_start_stop_charging(call: ServiceCall) -> None:
