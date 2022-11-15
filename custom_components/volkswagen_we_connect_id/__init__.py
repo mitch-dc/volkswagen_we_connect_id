@@ -24,7 +24,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.SENSOR,
     Platform.NUMBER,
-    #    Platform.DEVICE_TRACKER,
+    Platform.DEVICE_TRACKER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
