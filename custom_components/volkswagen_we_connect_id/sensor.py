@@ -199,7 +199,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     ),
     VolkswagenIdEntityDescription(
         key="frontRightLockStatus",
-        name="Door Right Left Lock Status",
+        name="Door Front Right Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
         .lockState.value,
@@ -241,7 +241,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     ),
     VolkswagenIdEntityDescription(
         key="frontRightOpenStatus",
-        name="Door Right Left Open Status",
+        name="Door Front Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
         .openState.value,
