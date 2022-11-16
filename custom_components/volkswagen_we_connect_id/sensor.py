@@ -283,7 +283,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     ),
     VolkswagenIdEntityDescription(
         key="windowfrontRightOpenStatus",
-        name="Window Front Right Left Open Status",
+        name="Window Front Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["frontRight"]
         .openState.value,
