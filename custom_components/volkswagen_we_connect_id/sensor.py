@@ -167,126 +167,126 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Bonnet Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["bonnet"]
-        .lockState.value,
+        .lockState.value if "bonnet" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="trunkLockStatus",
         name="Trunk Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["trunk"]
-        .lockState.value,
+        .lockState.value if "trunk" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="rearRightLockStatus",
         name="Door Rear Right Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearRight"]
-        .lockState.value,
+        .lockState.value if "rearRight" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="rearLeftLockStatus",
         name="Door Rear Left Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearLeft"]
-        .lockState.value,
+        .lockState.value if "rearLeft" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="frontLeftLockStatus",
         name="Door Front Left Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontLeft"]
-        .lockState.value,
+        .lockState.value if "frontLeft" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="frontRightLockStatus",
         name="Door Front Right Lock Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
-        .lockState.value,
+        .lockState.value if "frontRight" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="bonnetOpenStatus",
         name="Bonnet Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["bonnet"]
-        .openState.value,
+        .openState.value if "bonnet" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="trunkOpenStatus",
         name="Trunk Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["trunk"]
-        .openState.value,
+        .openState.value if "trunk" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="rearRightOpenStatus",
         name="Door Rear Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearRight"]
-        .openState.value,
+        .openState.value if "rearRight" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="rearLeftOpenStatus",
         name="Door Rear Left Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearLeft"]
-        .openState.value,
+        .openState.value if "rearLeft" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="frontLeftOpenStatus",
         name="Door Front Left Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontLeft"]
-        .openState.value,
+        .openState.value if "frontLeft" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="frontRightOpenStatus",
         name="Door Front Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
-        .openState.value,
+        .openState.value if "frontRight" in data["access"]["accessStatus"].doors else None,
     ),
     VolkswagenIdEntityDescription(
         key="sunRoofStatus",
         name="Sunroof Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["sunRoof"]
-        .openState.value,
+        .openState.value if "sunRoof" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="roofCoverStatus",
         name="Sunroof Cover Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["roofCover"]
-        .openState.value,
+        .openState.value if "roofCover" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="windowRearRightOpenStatus",
         name="Window Rear Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["rearRight"]
-        .openState.value,
+        .openState.value if "rearRight" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="windowRearLeftOpenStatus",
         name="Window Rear Left Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["rearLeft"]
-        .openState.value,
+        .openState.value if "rearLeft" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="windowFrontLeftOpenStatus",
         name="Window Front Left Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["frontLeft"]
-        .openState.value,
+        .openState.value if "frontLeft" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="windowfrontRightOpenStatus",
         name="Window Front Right Open Status",
         value=lambda data: data["access"]["accessStatus"]
         .windows["frontRight"]
-        .openState.value,
+        .openState.value if "frontRight" in data["access"]["accessStatus"].windows else None,
     ),
     VolkswagenIdEntityDescription(
         key="overallStatus",
