@@ -163,9 +163,9 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
             state = self.entity_description.value(self.data.domains)
             if isinstance(state, bool):
                 return state
-
-            state = get_object_value(state)
-            return state == get_object_value(self.entity_description.on_value)
+            
+            """ No data from API, so report as off"""
+            return False
 
         except KeyError:
             return None
