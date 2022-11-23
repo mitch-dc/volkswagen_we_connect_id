@@ -348,5 +348,10 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
 
-        state = get_object_value(self.entity_description.value(self.data.domains))
+        try:
+            state = get_object_value(self.entity_description.value(self.data.domains))
+        except (KeyError, ValueError):
+            return None
+
         return cast(StateType, state)
+
