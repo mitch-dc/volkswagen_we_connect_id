@@ -25,6 +25,7 @@ class VolkswagenIdBinaryEntityDescription(BinarySensorEntityDescription):
 
     value: Callable = lambda x, y: x
     on_value: object | None = None
+    enabled: Callable = lambda x, y: x
 
 
 SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
@@ -33,42 +34,42 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Climatisation Without External Power",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
-        ].climatisationWithoutExternalPower.value,
+        ].climatisationWithoutExternalPower,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="climatizationAtUnlock",
         name="Climatisation At Unlock",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
-        ].climatizationAtUnlock.value,
+        ].climatizationAtUnlock,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontLeftEnabled",
         name="Zone Front Left Enabled",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
-        ].zoneFrontLeftEnabled.value,
+        ].zoneFrontLeftEnabled,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontRightEnabled",
         name="Zone Front Right Enabled",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
-        ].zoneFrontRightEnabled.value,
+        ].zoneFrontRightEnabled,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="windowHeatingEnabled",
         name="Window Heating Enabled",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
-        ].windowHeatingEnabled.value,
+        ].windowHeatingEnabled,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="frontWindowHeatingState",
         name="Front Window Heating State",
         value=lambda data: data["climatisation"]["windowHeatingStatus"]
         .windows["front"]
-        .windowHeatingState.value,
+        .windowHeatingState,
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
@@ -76,20 +77,20 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Rear Window Heating State",
         value=lambda data: data["climatisation"]["windowHeatingStatus"]
         .windows["rear"]
-        .windowHeatingState.value,
+        .windowHeatingState,
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugConnectionState",
         name="Plug Connection State",
-        value=lambda data: data["charging"]["plugStatus"].plugConnectionState.value,
+        value=lambda data: data["charging"]["plugStatus"].plugConnectionState,
         device_class=BinarySensorDeviceClass.PLUG,
         on_value=PlugStatus.PlugConnectionState.CONNECTED,
     ),
     VolkswagenIdBinaryEntityDescription(
         key="plugLockState",
         name="Plug Lock State",
-        value=lambda data: data["charging"]["plugStatus"].plugLockState.value,
+        value=lambda data: data["charging"]["plugStatus"].plugLockState,
         device_class=BinarySensorDeviceClass.LOCK,
         on_value=PlugStatus.PlugLockState.UNLOCKED,
     ),
@@ -98,14 +99,14 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         name="Insufficient Battery Level Warning",
         value=lambda data: data["readiness"][
             "readinessStatus"
-        ].connectionWarning.insufficientBatteryLevelWarning.value,
+        ].connectionWarning.insufficientBatteryLevelWarning,
     ),
     VolkswagenIdBinaryEntityDescription(
         name="Car Is Online",
         key="isOnline",
         value=lambda data: data["readiness"][
             "readinessStatus"
-        ].connectionState.isOnline.value,
+        ].connectionState.isOnline,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     VolkswagenIdBinaryEntityDescription(
@@ -113,7 +114,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         key="isActive",
         value=lambda data: data["readiness"][
             "readinessStatus"
-        ].connectionState.isActive.value,
+        ].connectionState.isActive,
     ),
 )
 
@@ -161,11 +162,10 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, BinarySensorEntity):
         """Return true if sensor is on."""
         try:
             state = self.entity_description.value(self.data.domains)
-            if isinstance(state, bool):
-                return state
+            if state.enabled and isinstance(state.value, bool):
+                return state.value
 
-            state = get_object_value(state)
-            return state == get_object_value(self.entity_description.on_value)
+            return False
 
         except KeyError:
             return None
