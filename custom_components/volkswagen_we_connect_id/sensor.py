@@ -144,14 +144,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
-        name="Health Inspection",
-        key="inspectionDue",
-        native_unit_of_measurement=TIME_DAYS,
-        value=lambda data: data["vehicleHealthInspection"][
-            "maintenanceStatus"
-        ].inspectionDue_days.value,
-    ),
-    VolkswagenIdEntityDescription(
         name="Odometer ",
         key="odometer",
         native_unit_of_measurement=LENGTH_KILOMETERS,
@@ -300,6 +292,23 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
             "chargingSettings"
         ].autoUnlockPlugWhenCharged.value,
     ),
+    VolkswagenIdEntityDescription(
+        key="autoUnlockPlugWhenChargedAC",
+        name="Auto Unlock Plug When Charged AC",
+        value=lambda data: data["charging"][
+            "chargingSettings"
+        ].autoUnlockPlugWhenChargedAC.value,
+    ),
+    VolkswagenIdEntityDescription(
+        key="plugConnectionState",
+        name="Plug Connection State",
+        value=lambda data: data["charging"]["plugStatus"].plugConnectionState,
+    ),
+    VolkswagenIdEntityDescription(
+        key="plugLockState",
+        name="Plug Lock State",
+        value=lambda data: data["charging"]["plugStatus"].plugLockState,
+    ),
 )
 
 
@@ -354,4 +363,3 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
             return None
 
         return cast(StateType, state)
-
