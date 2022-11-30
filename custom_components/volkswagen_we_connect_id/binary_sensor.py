@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from weconnect import weconnect
 from weconnect.elements.plug_status import PlugStatus
+from weconnect.elements.lights_status import LightsStatus
 from weconnect.elements.window_heating_status import WindowHeatingStatus
 
 from homeassistant.components.binary_sensor import (
@@ -81,20 +82,6 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         on_value=WindowHeatingStatus.Window.WindowHeatingState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
-        key="plugConnectionState",
-        name="Plug Connection State",
-        value=lambda data: data["charging"]["plugStatus"].plugConnectionState,
-        device_class=BinarySensorDeviceClass.PLUG,
-        on_value=PlugStatus.PlugConnectionState.CONNECTED,
-    ),
-    VolkswagenIdBinaryEntityDescription(
-        key="plugLockState",
-        name="Plug Lock State",
-        value=lambda data: data["charging"]["plugStatus"].plugLockState,
-        device_class=BinarySensorDeviceClass.LOCK,
-        on_value=PlugStatus.PlugLockState.UNLOCKED,
-    ),
-    VolkswagenIdBinaryEntityDescription(
         key="insufficientBatteryLevelWarning",
         name="Insufficient Battery Level Warning",
         value=lambda data: data["readiness"][
@@ -115,6 +102,18 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
         value=lambda data: data["readiness"][
             "readinessStatus"
         ].connectionState.isActive,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Lights Right",
+        key="lightsRight",
+        value=lambda data: data["vehicleLights"]["lightsStatus"].lights["right"].status,
+        on_value=LightsStatus.Light.LightState.ON,
+    ),
+    VolkswagenIdBinaryEntityDescription(
+        name="Lights Left",
+        key="lightsLeft",
+        value=lambda data: data["vehicleLights"]["lightsStatus"].lights["left"].status,
+        on_value=LightsStatus.Light.LightState.ON,
     ),
 )
 
