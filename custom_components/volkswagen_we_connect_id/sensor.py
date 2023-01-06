@@ -49,6 +49,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="remainingClimatisationTime_min",
         name="Remaining Climatisation Time",
+        icon="mdi:fan-clock",
         native_unit_of_measurement=TIME_MINUTES,
         value=lambda data: data["climatisation"][
             "climatisationStatus"
@@ -79,6 +80,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="remainingChargingTimeToComplete_min",
         name="Remaining Charging Time",
+        icon="mdi:battery-clock",
         native_unit_of_measurement=TIME_MINUTES,
         value=lambda data: data["charging"][
             "chargingStatus"
@@ -152,6 +154,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="doorLockStatus",
         name="Door Lock Status",
+        icon="mdi:car-door-lock",
         value=lambda data: data["access"]["accessStatus"].doorLockStatus.value,
     ),
     VolkswagenIdEntityDescription(
@@ -171,6 +174,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="rearRightLockStatus",
         name="Door Rear Right Lock Status",
+        icon="mdi:car-door-lock",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearRight"]
         .lockState.value,
@@ -178,6 +182,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="rearLeftLockStatus",
         name="Door Rear Left Lock Status",
+        icon="mdi:car-door-lock",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearLeft"]
         .lockState.value,
@@ -185,6 +190,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="frontLeftLockStatus",
         name="Door Front Left Lock Status",
+        icon="mdi:car-door-lock",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontLeft"]
         .lockState.value,
@@ -192,6 +198,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="frontRightLockStatus",
         name="Door Front Right Lock Status",
+        icon="mdi:car-door-lock",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
         .lockState.value,
@@ -213,6 +220,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="rearRightOpenStatus",
         name="Door Rear Right Open Status",
+        icon="mdi:car-door",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearRight"]
         .openState.value,
@@ -220,6 +228,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="rearLeftOpenStatus",
         name="Door Rear Left Open Status",
+        icon="mdi:car-door",
         value=lambda data: data["access"]["accessStatus"]
         .doors["rearLeft"]
         .openState.value,
@@ -227,6 +236,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="frontLeftOpenStatus",
         name="Door Front Left Open Status",
+        icon="mdi:car-door",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontLeft"]
         .openState.value,
@@ -234,6 +244,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="frontRightOpenStatus",
         name="Door Front Right Open Status",
+        icon="mdi:car-door",
         value=lambda data: data["access"]["accessStatus"]
         .doors["frontRight"]
         .openState.value,
