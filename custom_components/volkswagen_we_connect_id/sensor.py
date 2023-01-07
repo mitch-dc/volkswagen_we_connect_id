@@ -146,7 +146,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
-        name="Odometer ",
+        name="Odometer",
         key="odometer",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         value=lambda data: data["measurements"]["odometerStatus"].odometer.value,
