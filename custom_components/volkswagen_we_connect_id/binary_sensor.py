@@ -33,6 +33,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="climatisationWithoutExternalPower",
         name="Climatisation Without External Power",
+        icon="mdi:fan",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
         ].climatisationWithoutExternalPower,
@@ -40,6 +41,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="climatizationAtUnlock",
         name="Climatisation At Unlock",
+        icon="mdi:fan",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
         ].climatizationAtUnlock,
@@ -47,6 +49,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontLeftEnabled",
         name="Zone Front Left Enabled",
+        icon="mdi:car-seat",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
         ].zoneFrontLeftEnabled,
@@ -54,6 +57,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="zoneFrontRightEnabled",
         name="Zone Front Right Enabled",
+        icon="mdi:car-seat",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
         ].zoneFrontRightEnabled,
@@ -61,6 +65,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="windowHeatingEnabled",
         name="Window Heating Enabled",
+        icon="mdi:car-defrost-front",
         value=lambda data: data["climatisation"][
             "climatisationSettings"
         ].windowHeatingEnabled,
@@ -68,6 +73,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="frontWindowHeatingState",
         name="Front Window Heating State",
+        icon="mdi:car-defrost-front",
         value=lambda data: data["climatisation"]["windowHeatingStatus"]
         .windows["front"]
         .windowHeatingState,
@@ -76,6 +82,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="rearWindowHeatingState",
         name="Rear Window Heating State",
+        icon="mdi:car-defrost-rear",
         value=lambda data: data["climatisation"]["windowHeatingStatus"]
         .windows["rear"]
         .windowHeatingState,
@@ -84,6 +91,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         key="insufficientBatteryLevelWarning",
         name="Insufficient Battery Level Warning",
+        icon="mdi:battery-alert-variant-outline",
         value=lambda data: data["readiness"][
             "readinessStatus"
         ].connectionWarning.insufficientBatteryLevelWarning,
@@ -99,6 +107,7 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         name="Car Is Active",
         key="isActive",
+        icon="mdi:car-side",
         value=lambda data: data["readiness"][
             "readinessStatus"
         ].connectionState.isActive,
@@ -106,12 +115,14 @@ SENSORS: tuple[VolkswagenIdBinaryEntityDescription, ...] = (
     VolkswagenIdBinaryEntityDescription(
         name="Lights Right",
         key="lightsRight",
+        icon="mdi:car-light-dimmed",
         value=lambda data: data["vehicleLights"]["lightsStatus"].lights["right"].status,
         on_value=LightsStatus.Light.LightState.ON,
     ),
     VolkswagenIdBinaryEntityDescription(
         name="Lights Left",
         key="lightsLeft",
+        icon="mdi:car-light-dimmed",
         value=lambda data: data["vehicleLights"]["lightsStatus"].lights["left"].status,
         on_value=LightsStatus.Light.LightState.ON,
     ),
