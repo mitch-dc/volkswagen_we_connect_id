@@ -1,0 +1,24 @@
+{
+	"state": {
+		"_": {
+			"locked": "Låst",
+			"unlocked": "Olåst",
+			"unknown lock state": "Okänt låsläge",
+			"closed": "Stängd",
+			"open": "Öppen",
+			"invalid": "Ogiltig",
+			"manual": "Manuell",
+			"notReadyForCharging": "Inte redo för laddning",
+			"charging": "Laddar",
+			"readyForCharging": "Redo för laddning",
+			"connected": "Ansluten",
+			"disconnected": "Frånkopplad",
+			"maximum": "Maximal",
+			"reduced": "Reducerad",
+			"heating": "Värmer",
+			"default": "Standard",
+			"safe": "Säker",
+      "unsafe": "Osäker"
+		}
+	}
+}
