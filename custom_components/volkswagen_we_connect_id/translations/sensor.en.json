@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Locked",
+            "unlocked": "Unlocked",
+            "unknown lock state": "Unknown lock state",
+            "closed": "Closed",
+			      "open": "Open",
+            "invalid": "Invalid",
+            "manual": "Manual",
+            "notReadyForCharging": "Not Ready For Charging",
+            "charging": "Charging",
+            "readyForCharging": "Ready for charging",
+            "connected": "Connected",
+			      "disconnected": "Disconnected",
+            "maximum": "Maximum",
+            "reduced": "Reduced",
+            "heating": "Heating",
+            "default": "Default",
+            "safe": "Safe",
+            "unsafe": "Unsafe"
+        }
+    }
+}
