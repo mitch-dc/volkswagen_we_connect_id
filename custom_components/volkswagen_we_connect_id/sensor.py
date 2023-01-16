@@ -135,7 +135,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"]["chargingSettings"].targetSOC_pct.value,
     ),
     VolkswagenIdEntityDescription(
-        key="currentSOC_pctD
+        key="currentSOC_pct",
         name="State of Charge",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
