@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Abgeschlossen",
+            "unlocked": "Offen",
+            "unknown lock state": "Verriegelung unklar",
+            "closed": "Geschlossen",
+			      "open": "Offen",
+            "invalid": "Ungültig",
+            "manual": "Manuell",
+            "notReadyForCharging": "Nicht bereit zum Laden",
+            "charging": "Lädt",
+            "readyForCharging": "Bereit zum Laden",
+            "connected": "Verbunden",
+			      "disconnected": "Getrennt",
+            "maximum": "Maxmimal",
+            "reduced": "Verringert",
+            "heating": "Heizung",
+            "default": "Standard",
+            "safe": "Sicher",
+            "unsafe": "Unsicher"
+        }
+    }
+}
