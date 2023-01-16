@@ -135,7 +135,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"]["chargingSettings"].targetSOC_pct.value,
     ),
     VolkswagenIdEntityDescription(
-        key="currentSOC_pct",
+        key="currentSOC_pctD
         name="State of Charge",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
@@ -149,6 +149,15 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         value=lambda data: data["charging"][
             "batteryStatus"
         ].cruisingRangeElectric_km.value,
+    ),
+    VolkswagenIdEntityDescription(
+         name="Health Inspection",
+         key="inspectionDue",
+         icon="mdi:wrench-clock-outline",
+         native_unit_of_measurement=TIME_DAYS,
+         value=lambda data: data["vehicleHealthInspection"][
+             "maintenanceStatus"
+         ].inspectionDue_days.value,
     ),
     VolkswagenIdEntityDescription(
         name="Odometer",
