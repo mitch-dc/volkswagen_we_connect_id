@@ -151,6 +151,15 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
+         name="Health Inspection",
+         key="inspectionDue",
+         icon="mdi:wrench-clock-outline",
+         native_unit_of_measurement=TIME_DAYS,
+         value=lambda data: data["vehicleHealthInspection"][
+             "maintenanceStatus"
+         ].inspectionDue_days.value,
+    ),
+    VolkswagenIdEntityDescription(
         name="Odometer",
         key="odometer",
         icon="mdi:car-cruise-control",
