@@ -53,6 +53,7 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{self.data.nickname} Target State Of Charge"
         self._attr_unique_id = f"{self.data.vin}-target_state_of_charge"
+        self._attr_icon = "mdi:battery"
         self._we_connect = we_connect
         self._attr_native_min_value = 10
         self._attr_native_max_value = 100
@@ -95,6 +96,7 @@ class TargetClimateNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{self.data.nickname} Target Climate Temperature"
         self._attr_unique_id = f"{self.data.vin}-target_climate_temperature"
+        self._attr_icon = "mdi:thermometer"
         self._we_connect = we_connect
         self._attr_native_min_value = 10
         self._attr_native_max_value = 30
