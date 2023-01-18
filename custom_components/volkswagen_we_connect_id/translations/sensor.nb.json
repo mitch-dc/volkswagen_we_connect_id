@@ -1,0 +1,24 @@
+{
+	"state": {
+		"_": {
+			"locked": "Låst",
+			"unlocked": "Ulåst",
+			"unknown lock state": "Ukjent låsstatus",
+			"closed": "Lukket",
+			"open": "Åpen",
+			"invalid": "Ugyldig",
+			"manual": "Manuell",
+			"notReadyForCharging": "Ikke klar for opplading",
+			"charging": "Lader",
+			"readyForCharging": "Klar for opplading",
+			"connected": "Tilkoblet",
+			"disconnected": "Frakoblet",
+			"maximum": "Maksimum",
+			"reduced": "Redusert",
+			"heating": "Varmer",
+			"default": "Standard",
+			"safe": "Sikker",
+			"unsafe": "Usikker"
+		}
+	}
+}
