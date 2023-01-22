@@ -1,4 +1,4 @@
-# Volkswagen We Connect ID
+# Volkswagen We Connect ID [ONLY FOR EUROPE]
 _Volkswagen We Connect ID sensor provides statistics from the Volkswagen ID Api thru [WeConnect-python lib](https://pypi.org/project/weconnect/)._
 
 **This component will set up the following platforms.**
@@ -40,11 +40,14 @@ It's important that you first use the app, connect the app to the car and use it
 After that enable the integration on the integration page in Home Assistant with your e-mail and password that you use to login into the app. Wait a couple of seconds and 1 or more devices (your cars) with entities will show up. 
 
 ## Tested Cars
+_This integration only works with cars sold in Europe and use the WeConnect ID app_
 
 * Volkswagen ID.3
 * Volkswagen ID.4
 * Volkswagen ID.5
+* Volkswagen ID Buzz
 
 ## Requirements
 
 Home Assistant Core *2022.7.0* or higher
+
