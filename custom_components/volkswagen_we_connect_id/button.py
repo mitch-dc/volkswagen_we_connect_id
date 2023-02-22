@@ -97,7 +97,7 @@ class VolkswagenIDStartChargingButton(ButtonEntity):
         """Initialize VolkswagenID vehicle sensor."""
         self._attr_name = f"{vehicle.nickname} Start Charging"
         self._attr_unique_id = f"{vehicle.vin}-start_charging"
-        self._attr_icon = "mdi:ev-station"
+        self._attr_icon = "mdi:play-circle-outline"
         self._we_connect = we_connect
         self._vehicle = vehicle
 
