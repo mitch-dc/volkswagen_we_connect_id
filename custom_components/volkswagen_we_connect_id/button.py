@@ -4,7 +4,7 @@ from weconnect.elements.vehicle import Vehicle
 
 from homeassistant.components.button import ButtonEntity
 
-from . import get_object_value, set_ac_charging_speed, set_climatisation
+from . import get_object_value, set_ac_charging_speed, set_climatisation, start_stop_charging
 from .const import DOMAIN
 
 
@@ -18,6 +18,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(VolkswagenIDStartClimateButton(vehicle, we_connect))
         entities.append(VolkswagenIDStopClimateButton(vehicle, we_connect))
         entities.append(VolkswagenIDToggleACChargeSpeed(vehicle, we_connect))
+        entities.append(VolkswagenIDStartChargingButton(vehicle, we_connect))
+        entities.append(VolkswagenIDStopChargingButton(vehicle, we_connect))
 
     async_add_entities(entities)
 
@@ -86,3 +88,35 @@ class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
                 self._we_connect,
                 "maximum",
             )
+
+
+class VolkswagenIDStartChargingButton(ButtonEntity):
+    """Button for start charging."""
+
+    def __init__(self, vehicle, we_connect) -> None:
+        """Initialize VolkswagenID vehicle sensor."""
+        self._attr_name = f"{vehicle.nickname} Start Charging"
+        self._attr_unique_id = f"{vehicle.vin}-start_charging"
+        self._attr_icon = "mdi:play-circle-outline"
+        self._we_connect = we_connect
+        self._vehicle = vehicle
+
+    def press(self) -> None:
+        """Handle the button press."""
+        start_stop_charging(self._vehicle.vin.value, self._we_connect, "start")
+
+
+class VolkswagenIDStopChargingButton(ButtonEntity):
+    """Button for stop charging."""
+
+    def __init__(self, vehicle, we_connect) -> None:
+        """Initialize VolkswagenID vehicle sensor."""
+        self._attr_name = f"{vehicle.nickname} Stop Charging"
+        self._attr_unique_id = f"{vehicle.vin}-stop_charging"
+        self._attr_icon = "mdi:stop-circle-outline"
+        self._we_connect = we_connect
+        self._vehicle = vehicle
+
+    def press(self) -> None:
+        """Handle the button press."""
+        start_stop_charging(self._vehicle.vin.value, self._we_connect, "stop")
