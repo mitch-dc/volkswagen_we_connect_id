@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Verrouillé",
+            "unlocked": "Déverrouillé",
+            "unknown lock state": "Verrouillage inconnu",
+            "closed": "Fermé",
+            "open": "Ouvert",
+            "invalid": "Invalide",
+            "manual": "Manuel",
+            "notReadyForCharging": "Pas prêt à charger",
+            "charging": "Charge",
+            "readyForCharging": "Prêt à charger",
+            "connected": "Connecté",
+            "disconnected": "Déconnecté",
+            "maximum": "Maximal",
+            "reduced": "Réduit",
+            "heating": "Chauffage",
+            "default": "Par défaut",
+            "safe": "Sûr",
+            "unsafe": "Pas sûr"
+        }
+    }
+}

@@ -1,24 +1,24 @@
 {
-  "state": {
-    "_": {
-      "locked": "Låst",
-      "unlocked": "Låst op",
-      "unknown lock state": "Ukendt låsestatus",
-      "closed": "Lukket",
-      "open": "Åben",
-      "invalid": "Ugyldig",
-      "manual": "Manuel",
-      "notReadyForCharging": "Ikke klar til opladning",
-      "charging": "Oplader",
-      "readyForCharging": "Klar til opladning",
-      "connected": "Tilsluttet",
-      "disconnected": "Afbrudt",
-      "maximum": "Maksimum",
-      "reduced": "Reduceret",
-      "heating": "Opvarmer",
-      "default": "Standard",
-      "safe": "Sikker",
-      "unsafe": "Usikker"
+    "state": {
+        "_": {
+            "locked": "Låst",
+            "unlocked": "Låst op",
+            "unknown lock state": "Ukendt låsestatus",
+            "closed": "Lukket",
+            "open": "Åben",
+            "invalid": "Ugyldig",
+            "manual": "Manuel",
+            "notReadyForCharging": "Ikke klar til opladning",
+            "charging": "Oplader",
+            "readyForCharging": "Klar til opladning",
+            "connected": "Tilsluttet",
+            "disconnected": "Afbrudt",
+            "maximum": "Maksimum",
+            "reduced": "Reduceret",
+            "heating": "Opvarmer",
+            "default": "Standard",
+            "safe": "Sikker",
+            "unsafe": "Usikker"
+        }
     }
-  }
 }

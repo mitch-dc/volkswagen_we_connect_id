@@ -18,7 +18,7 @@
 			"heating": "Värmer",
 			"default": "Standard",
 			"safe": "Säker",
-      "unsafe": "Osäker"
+			"unsafe": "Osäker"
 		}
 	}
 }
