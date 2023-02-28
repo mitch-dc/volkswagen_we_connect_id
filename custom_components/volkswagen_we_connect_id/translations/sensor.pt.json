@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Bloqueado",
+            "unlocked": "Desbloqueado",
+            "unknown lock state": "Estado de bloqueio desconhecido",
+            "closed": "Fechado",
+            "open": "Aberto",
+            "invalid": "Inválido",
+            "manual": "Manual",
+            "notReadyForCharging": "Não está pronto para carregar",
+            "charging": "A carregar",
+            "readyForCharging": "Pronto para carregar",
+            "connected": "Conectado",
+            "disconnected": "Desconectado",
+            "maximum": "Máximo",
+            "reduced": "Reduzido",
+            "heating": "Aquecimento",
+            "default": "Por padrão",
+            "safe": "Seguro",
+            "unsafe": "Inseguro"
+        }
+    }
+}
