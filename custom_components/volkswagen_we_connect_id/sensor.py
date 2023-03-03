@@ -98,7 +98,6 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Charge Power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
-        state_class=measurement,
         value=lambda data: data["charging"]["chargingStatus"].chargePower_kW.value,
     ),
     VolkswagenIdEntityDescription(
