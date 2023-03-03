@@ -49,5 +49,5 @@ _This integration only works with cars sold in Europe and use the WeConnect ID a
 
 ## Requirements
 
-Home Assistant Core *2022.7.0* or higher
+Home Assistant Core *2023.3.1* or higher
 
