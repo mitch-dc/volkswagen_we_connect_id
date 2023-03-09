@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Vergrendeld",
+            "unlocked": "Ontgrendeld",
+            "unknown lock state": "Onbekende Vergrendelingsstatus",
+            "closed": "Gesloten",
+            "open": "Open",
+            "invalid": "Ongeldig",
+            "manual": "Handmatig",
+            "notReadyForCharging": "Niet gereed om op te laden",
+            "charging": "Opladen",
+            "readyForCharging": "Gereed om op te laden",
+            "connected": "Verbonden",
+            "disconnected": "Losgekoppeld",
+            "maximum": "Maximaal",
+            "reduced": "Verminderd",
+            "heating": "Verwarming",
+            "default": "Standaard",
+            "safe": "Veilig",
+            "unsafe": "onveilig"
+        }
+    }
+}
