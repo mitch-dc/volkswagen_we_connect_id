@@ -1,0 +1,11 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "postCreateCommand": "python .devcontainer/init.py",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python"
+            ]
+        }
+    }
+}
