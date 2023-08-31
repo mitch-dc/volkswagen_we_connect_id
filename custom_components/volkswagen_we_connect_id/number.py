@@ -55,18 +55,21 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._attr_unique_id = f"{self.data.vin}-target_state_of_charge"
         self._attr_icon = "mdi:battery"
         self._we_connect = we_connect
-        self._attr_native_min_value = 10
+        self._attr_native_min_value = 0
         self._attr_native_max_value = 100
         self._attr_native_step = 10
 
     @property
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
-        return int(
-            get_object_value(
-                self.data.domains["charging"]["chargingSettings"].targetSOC_pct.value
+        try:
+            return int(
+                    get_object_value(
+                    self.data.domains["charging"]["chargingSettings"].targetSOC_pct.value
+                )
             )
-        )
+        except:
+            return None
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
