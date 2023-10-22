@@ -16,6 +16,7 @@ from . import (
 from .const import DOMAIN
 
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -58,6 +59,7 @@ class TargetSoCNumber(VolkswagenIDBaseEntity, NumberEntity):
         self._attr_native_min_value = 10
         self._attr_native_max_value = 100
         self._attr_native_step = 10
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def native_value(self) -> float | None:
