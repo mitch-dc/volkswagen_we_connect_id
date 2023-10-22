@@ -21,6 +21,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfEnergy,
 )
 
 
@@ -39,6 +40,14 @@ class VolkswagenIdEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
+    VolkswagenIdEntityDescription(
+        key="carType",
+        name="Car Type",
+        icon="mdi:car",
+        value=lambda data: data["fuelStatus"][
+            "rangeStatus"
+        ].carType.value,
+    ),
     VolkswagenIdEntityDescription(
         key="climatisationState",
         name="Climatisation State",
@@ -158,6 +167,15 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
          value=lambda data: data["vehicleHealthInspection"][
              "maintenanceStatus"
          ].inspectionDue_days.value,
+    ),
+    VolkswagenIdEntityDescription(
+         name="Health Inspection km",
+         key="inspectionDuekm",
+         icon="mdi:wrench-clock-outline",
+         native_unit_of_measurement=LENGTH_KILOMETERS,
+         value=lambda data: data["vehicleHealthInspection"][
+             "maintenanceStatus"
+         ].inspectionDue_km.value,
     ),
     VolkswagenIdEntityDescription(
         name="Odometer",
@@ -346,8 +364,59 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         icon="mdi:ev-plug-type2",
         value=lambda data: data["charging"]["plugStatus"].plugLockState,
     ),
+    VolkswagenIdEntityDescription(
+        name="Fuel Level",
+        key="fuelLevel",
+        icon="mdi:fuel",
+        native_unit_of_measurement=PERCENTAGE,
+        value=lambda data: data["fuelStatus"]["rangeStatus"].primaryEngine.currentFuelLevel_pct.value,
+    ),
+    VolkswagenIdEntityDescription(
+        name="Gasoline Range",
+        key="GasolineRange",
+        icon="mdi:car-arrow-right",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        value=lambda data: data["measurements"][
+            "rangeStatus"
+        ].gasolineRange.value,
+    ),
+    VolkswagenIdEntityDescription(
+         name="Oil Inspection days",
+         key="oilInspectionDue",
+         icon="mdi:wrench-clock-outline",
+         native_unit_of_measurement=TIME_DAYS,
+         value=lambda data: data["vehicleHealthInspection"][
+             "maintenanceStatus"
+         ].oilServiceDue_days.value,
+    ),
+    VolkswagenIdEntityDescription(
+         name="Oil Inspection km",
+         key="oilInspectionDuekm",
+         icon="mdi:wrench-clock-outline",
+         native_unit_of_measurement=LENGTH_KILOMETERS,
+         value=lambda data: data["vehicleHealthInspection"][
+             "maintenanceStatus"
+         ].oilServiceDue_km.value,
+    ),
+
 )
 
+VEHICLE_SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
+    VolkswagenIdEntityDescription(
+        key="lastTripAverageElectricConsumption",
+        name="Last Trip Average Electric consumption",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value=lambda vehicle: vehicle.trips["shortTerm"].averageElectricConsumption.value,
+    ),
+    VolkswagenIdEntityDescription(
+        key="lastTripAverageFuelConsumption",
+        name="Last Trip Average Fuel consumption",
+        native_unit_of_measurement="l/100km",
+        value=lambda vehicle: vehicle.trips["shortTerm"].averageFuelConsumption.value,
+    ),
+
+)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
@@ -363,6 +432,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for index, vehicle in enumerate(coordinator.data):
         for sensor in SENSORS:
             entities.append(VolkswagenIDSensor(sensor, we_connect, coordinator, index))
+        for sensor in VEHICLE_SENSORS:
+            entities.append(VolkswagenIDVehicleSensor(sensor, we_connect, coordinator, index))
+
     if entities:
         async_add_entities(entities)
 
@@ -400,3 +472,38 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
             return None
 
         return cast(StateType, state)
+
+class VolkswagenIDVehicleSensor(VolkswagenIDBaseEntity, SensorEntity):
+    """Representation of a VolkswagenID vehicle sensor."""
+
+    entity_description: VolkswagenIdEntityDescription
+
+    def __init__(
+        self,
+        sensor: VolkswagenIdEntityDescription,
+        we_connect: weconnect.WeConnect,
+        coordinator: DataUpdateCoordinator,
+        index: int,
+    ) -> None:
+        """Initialize VolkswagenID vehicle sensor."""
+        super().__init__(we_connect, coordinator, index)
+
+        self.entity_description = sensor
+        self._coordinator = coordinator
+        self._attr_name = f"{self.data.nickname} {sensor.name}"
+        self._attr_unique_id = f"{self.data.vin}-{sensor.key}"
+        if sensor.native_unit_of_measurement:
+            self._attr_native_unit_of_measurement = sensor.native_unit_of_measurement
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state."""
+
+        try:
+            state = get_object_value(self.entity_description.value(self.data))
+        except (KeyError, ValueError):
+            return None
+
+        return cast(StateType, state)
+
