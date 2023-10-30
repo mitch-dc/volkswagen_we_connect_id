@@ -42,15 +42,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         updateAfterLogin=False,
         loginOnInit=False,
         timeout=10,
+        updatePictures=False,
     )
 
     await hass.async_add_executor_job(_we_connect.login)
-    await hass.async_add_executor_job(_we_connect.update)
+    await hass.async_add_executor_job(update, _we_connect)
 
     async def async_update_data():
         """Fetch data from Volkswagen API."""
 
-        await hass.async_add_executor_job(_we_connect.update)
+        await hass.async_add_executor_job(update, _we_connect)
 
         vehicles = []
 
@@ -170,6 +171,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return True
 
+
+def update(
+    api: weconnect.WeConnect
+) -> None:
+    """API call to update vehicle information."""
+    api.update(updatePictures=False)
 
 def start_stop_charging(
     call_data_vin, api: weconnect.WeConnect, operation: str

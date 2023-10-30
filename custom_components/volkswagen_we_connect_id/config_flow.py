@@ -32,17 +32,23 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         password=data["password"],
         updateAfterLogin=False,
         loginOnInit=False,
+        updatePictures=False,
     )
 
     # TODO: ADD Validation on credentials
 
     await hass.async_add_executor_job(we_connect.login)
-    await hass.async_add_executor_job(we_connect.update)
+    await hass.async_add_executor_job(update, we_connect)
 
     # vin = next(iter(we_connect.vehicles.items()))[0]
 
     return {"title": "Volkswagen We Connect ID"}
 
+def update(
+    api: weconnect.WeConnect
+) -> None:
+    """API call to update vehicle information."""
+    api.update(updatePictures=False)
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volkswagen We Connect ID."""
