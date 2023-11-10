@@ -398,6 +398,26 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
              "maintenanceStatus"
          ].oilServiceDue_km.value,
     ),
+    VolkswagenIdEntityDescription(
+        name="HV Battery Temperature Min",
+        key="hvBatteryTemperatureMin",
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value=lambda data: data["measurements"][
+            "temperatureBatteryStatus"
+        ].temperatureHvBatteryMin_K.value - 273.15,
+    ),
+    VolkswagenIdEntityDescription(
+        name="HV Battery Temperature Max",
+        key="hvBatteryTemperatureMax",
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value=lambda data: data["measurements"][
+            "temperatureBatteryStatus"
+        ].temperatureHvBatteryMax_K.value - 273.15,
+    ),
 
 )
 
