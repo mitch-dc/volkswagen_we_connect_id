@@ -153,6 +153,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Range",
         key="cruisingRangeElectric",
         icon="mdi:car-arrow-right",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["charging"][
             "batteryStatus"
@@ -171,6 +172,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Health Inspection km",
         key="inspectionDuekm",
         icon="mdi:wrench-clock-outline",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["vehicleHealthInspection"][
             "maintenanceStatus"
@@ -180,6 +182,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Odometer",
         key="odometer",
         icon="mdi:car-cruise-control",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["measurements"]["odometerStatus"].odometer.value,
     ),
@@ -374,6 +377,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Gasoline Range",
         key="GasolineRange",
         icon="mdi:car-arrow-right",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["measurements"][
             "rangeStatus"
@@ -392,6 +396,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Oil Inspection km",
         key="oilInspectionDuekm",
         icon="mdi:wrench-clock-outline",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["vehicleHealthInspection"][
             "maintenanceStatus"
