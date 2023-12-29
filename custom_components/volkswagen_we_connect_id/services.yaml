@@ -84,7 +84,7 @@ volkswagen_id_set_ac_charge_speed:
         text:
     maximum_reduced:
       name: Maximum or reduced
-      description: Starts or stops climatisation.
+      description: Maximum (default) charging speed or reduced speed. Actual maximum/reduced speed depends on charging station.
       required: true
       selector:
         select:
