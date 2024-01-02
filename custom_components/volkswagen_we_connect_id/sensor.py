@@ -14,14 +14,13 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
 )
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    SPEED_KILOMETERS_PER_HOUR,
-    TIME_DAYS,
-    TIME_MINUTES,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfEnergy,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTime,
 )
 
 
@@ -60,7 +59,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="remainingClimatisationTime_min",
         name="Remaining Climatisation Time",
         icon="mdi:fan-clock",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value=lambda data: data["climatisation"][
             "climatisationStatus"
         ].remainingClimatisationTime_min.value,
@@ -91,7 +90,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         key="remainingChargingTimeToComplete_min",
         name="Remaining Charging Time",
         icon="mdi:battery-clock",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value=lambda data: data["charging"][
             "chargingStatus"
         ].remainingChargingTimeToComplete_min.value,
@@ -112,7 +111,7 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
     VolkswagenIdEntityDescription(
         key="chargeRate_kmph",
         name="Charge Rate",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         value=lambda data: data["charging"]["chargingStatus"].chargeRate_kmph.value,
     ),
@@ -154,34 +153,37 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Range",
         key="cruisingRangeElectric",
         icon="mdi:car-arrow-right",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["charging"][
             "batteryStatus"
         ].cruisingRangeElectric_km.value,
     ),
     VolkswagenIdEntityDescription(
-         name="Health Inspection",
-         key="inspectionDue",
-         icon="mdi:wrench-clock-outline",
-         native_unit_of_measurement=TIME_DAYS,
-         value=lambda data: data["vehicleHealthInspection"][
-             "maintenanceStatus"
-         ].inspectionDue_days.value,
+        name="Health Inspection",
+        key="inspectionDue",
+        icon="mdi:wrench-clock-outline",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].inspectionDue_days.value,
     ),
     VolkswagenIdEntityDescription(
-         name="Health Inspection km",
-         key="inspectionDuekm",
-         icon="mdi:wrench-clock-outline",
-         native_unit_of_measurement=LENGTH_KILOMETERS,
-         value=lambda data: data["vehicleHealthInspection"][
-             "maintenanceStatus"
-         ].inspectionDue_km.value,
+        name="Health Inspection km",
+        key="inspectionDuekm",
+        icon="mdi:wrench-clock-outline",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].inspectionDue_km.value,
     ),
     VolkswagenIdEntityDescription(
         name="Odometer",
         key="odometer",
         icon="mdi:car-cruise-control",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["measurements"]["odometerStatus"].odometer.value,
     ),
     VolkswagenIdEntityDescription(
@@ -375,28 +377,30 @@ SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
         name="Gasoline Range",
         key="GasolineRange",
         icon="mdi:car-arrow-right",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         value=lambda data: data["measurements"][
             "rangeStatus"
         ].gasolineRange.value,
     ),
     VolkswagenIdEntityDescription(
-         name="Oil Inspection days",
-         key="oilInspectionDue",
-         icon="mdi:wrench-clock-outline",
-         native_unit_of_measurement=TIME_DAYS,
-         value=lambda data: data["vehicleHealthInspection"][
-             "maintenanceStatus"
-         ].oilServiceDue_days.value,
+        name="Oil Inspection days",
+        key="oilInspectionDue",
+        icon="mdi:wrench-clock-outline",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].oilServiceDue_days.value,
     ),
     VolkswagenIdEntityDescription(
-         name="Oil Inspection km",
-         key="oilInspectionDuekm",
-         icon="mdi:wrench-clock-outline",
-         native_unit_of_measurement=LENGTH_KILOMETERS,
-         value=lambda data: data["vehicleHealthInspection"][
-             "maintenanceStatus"
-         ].oilServiceDue_km.value,
+        name="Oil Inspection km",
+        key="oilInspectionDuekm",
+        icon="mdi:wrench-clock-outline",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        value=lambda data: data["vehicleHealthInspection"][
+            "maintenanceStatus"
+        ].oilServiceDue_km.value,
     ),
     VolkswagenIdEntityDescription(
         name="HV Battery Temperature Min",
@@ -526,4 +530,3 @@ class VolkswagenIDVehicleSensor(VolkswagenIDBaseEntity, SensorEntity):
             return None
 
         return cast(StateType, state)
-
