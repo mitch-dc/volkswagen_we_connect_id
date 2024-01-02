@@ -1,0 +1,24 @@
+{
+    "state": {
+        "_": {
+            "locked": "Bloccato",
+            "unlocked": "Sbloccato",
+            "unknown lock state": "Stato di blocco sconosciuto",
+            "closed": "Chiuso",
+            "open": "Aperto",
+            "invalid": "Invalido",
+            "manual": "Manuale",
+            "notReadyForCharging": "Non pronto per la ricarica",
+            "charging": "In carica",
+            "readyForCharging": "Pronto per la ricarica",
+            "connected": "Connesso",
+            "disconnected": "Disconnesso",
+            "maximum": "Massimo",
+            "reduced": "Ridotto",
+            "heating": "Riscaldamento",
+            "default": "Default",
+            "safe": "Sicuro",
+            "unsafe": "Non sicuro"
+        }
+    }
+}
