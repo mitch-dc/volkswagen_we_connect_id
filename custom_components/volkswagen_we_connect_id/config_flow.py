@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, DEFAULT_UPDATE_INTERVAL_SECONDS, MINIMUM_UPDATE_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("username"): str,
         vol.Required("password"): str,
+        vol.Optional(
+            "update_interval", default=DEFAULT_UPDATE_INTERVAL_SECONDS
+        ): vol.All(vol.Coerce(int), vol.Range(min=MINIMUM_UPDATE_INTERVAL_SECONDS)),
     }
 )
 
@@ -54,6 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volkswagen We Connect ID."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
