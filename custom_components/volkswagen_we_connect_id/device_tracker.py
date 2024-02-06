@@ -5,7 +5,7 @@ import logging
 
 from weconnect import weconnect
 
-from homeassistant.components.device_tracker import SourceType.GPS
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
