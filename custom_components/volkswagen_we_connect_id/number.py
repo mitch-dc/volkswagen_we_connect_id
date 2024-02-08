@@ -4,10 +4,14 @@ from __future__ import annotations
 from weconnect import weconnect
 
 from homeassistant.components.number import NumberEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import (
+    DomainEntry,
     VolkswagenIDBaseEntity,
     get_object_value,
     set_climatisation,
@@ -21,11 +25,15 @@ from homeassistant.const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Add buttons for passed config_entry in HA."""
-    we_connect: weconnect.WeConnect
-    we_connect = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id + "_coordinator"]
+    domain_entry: DomainEntry = hass.data[DOMAIN][config_entry.entry_id]
+    we_connect = domain_entry.we_connect
+    coordinator = domain_entry.coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
