@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from weconnect import weconnect
 from weconnect.errors import AuthentificationError
 
 from homeassistant import config_entries
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from . import get_we_connect_api, update
 from .const import DOMAIN, DEFAULT_UPDATE_INTERVAL_SECONDS, MINIMUM_UPDATE_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,12 +31,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    we_connect = weconnect.WeConnect(
+    we_connect = get_we_connect_api(
         username=data["username"],
         password=data["password"],
-        updateAfterLogin=False,
-        loginOnInit=False,
-        updatePictures=False,
     )
 
     await hass.async_add_executor_job(we_connect.login)
@@ -46,11 +43,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     return {"title": "Volkswagen We Connect ID"}
 
-def update(
-    api: weconnect.WeConnect
-) -> None:
-    """API call to update vehicle information."""
-    api.update(updatePictures=False)
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volkswagen We Connect ID."""
