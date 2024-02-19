@@ -6,6 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 from weconnect import weconnect
+from weconnect.errors import AuthentificationError
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -37,8 +38,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         loginOnInit=False,
         updatePictures=False,
     )
-
-    # TODO: ADD Validation on credentials
 
     await hass.async_add_executor_job(we_connect.login)
     await hass.async_add_executor_job(update, we_connect)
@@ -74,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except AuthentificationError:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -89,7 +88,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
