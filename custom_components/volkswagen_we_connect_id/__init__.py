@@ -29,7 +29,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz"]
+SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz", "Transporter 7"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
