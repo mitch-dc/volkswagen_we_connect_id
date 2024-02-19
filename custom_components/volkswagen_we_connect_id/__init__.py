@@ -1,11 +1,13 @@
 """The Volkswagen We Connect ID integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import asyncio
 import time
 from weconnect import weconnect
+from weconnect.elements.vehicle import Vehicle
 from weconnect.elements.control_operation import ControlOperation
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +34,15 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz"]
 
 
+@dataclass
+class DomainEntry:
+    """References to objects shared through hass.data[DOMAIN][config_entry_id]."""
+
+    coordinator: DataUpdateCoordinator[list[Vehicle]]
+    we_connect: weconnect.WeConnect
+    vehicles: list[Vehicle]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen We Connect ID from a config entry."""
 
@@ -48,21 +59,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(_we_connect.login)
     await hass.async_add_executor_job(update, _we_connect)
 
-    async def async_update_data():
+    async def async_update_data() -> list[Vehicle]:
         """Fetch data from Volkswagen API."""
 
         await hass.async_add_executor_job(update, _we_connect)
 
-        vehicles = []
+        vehicles: list[Vehicle] = []
 
         for vin, vehicle in _we_connect.vehicles.items():
             if vehicle.model.value in SUPPORTED_VEHICLES:
                 vehicles.append(vehicle)
 
-        hass.data[DOMAIN][entry.entry_id + "_vehicles"] = vehicles
+        domain_entry: DomainEntry = hass.data[DOMAIN][entry.entry_id]
+        domain_entry.vehicles = vehicles
         return vehicles
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[list[Vehicle]](
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -72,10 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id + "_coordinator"] = coordinator
-    hass.data[DOMAIN][entry.entry_id] = _we_connect
-    hass.data[DOMAIN][entry.entry_id + "_vehicles"] = []
+    hass.data[DOMAIN][entry.entry_id] = DomainEntry(coordinator, _we_connect, [])
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

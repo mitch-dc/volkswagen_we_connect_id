@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     SensorDeviceClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPower,
@@ -22,12 +23,12 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTime,
 )
-
-
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import VolkswagenIDBaseEntity, get_object_value
+from . import DomainEntry, VolkswagenIDBaseEntity, get_object_value
 from .const import DOMAIN
 
 
@@ -442,11 +443,16 @@ VEHICLE_SENSORS: tuple[VolkswagenIdEntityDescription, ...] = (
 
 )
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Add sensors for passed config_entry in HA."""
-    we_connect: weconnect.WeConnect
-    we_connect = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id + "_coordinator"]
+    domain_entry: DomainEntry = hass.data[DOMAIN][config_entry.entry_id]
+    we_connect = domain_entry.we_connect
+    coordinator = domain_entry.coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

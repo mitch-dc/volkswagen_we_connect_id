@@ -3,15 +3,29 @@ from weconnect import weconnect
 from weconnect.elements.vehicle import Vehicle
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import get_object_value, set_ac_charging_speed, set_climatisation, start_stop_charging
+from . import (
+    DomainEntry,
+    get_object_value,
+    set_ac_charging_speed,
+    set_climatisation,
+    start_stop_charging,
+)
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
     """Add buttons for passed config_entry in HA."""
-    we_connect = hass.data[DOMAIN][config_entry.entry_id]
-    vehicles = hass.data[DOMAIN][config_entry.entry_id + "_vehicles"]
+    domain_entry: DomainEntry = hass.data[DOMAIN][config_entry.entry_id]
+    we_connect = domain_entry.we_connect
+    vehicles = domain_entry.vehicles
 
     entities = []
     for vehicle in vehicles:  # weConnect.vehicles.items():
