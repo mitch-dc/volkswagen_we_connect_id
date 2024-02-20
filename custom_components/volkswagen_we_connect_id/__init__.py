@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import functools
 import logging
-import asyncio
+import threading
 import time
+
 from weconnect import weconnect
 from weconnect.elements.vehicle import Vehicle
 from weconnect.elements.control_operation import ControlOperation
@@ -47,13 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen We Connect ID from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    _we_connect = weconnect.WeConnect(
+    _we_connect = get_we_connect_api(
         username=entry.data["username"],
         password=entry.data["password"],
-        updateAfterLogin=False,
-        loginOnInit=False,
-        timeout=10,
-        updatePictures=False,
     )
 
     await hass.async_add_executor_job(_we_connect.login)
@@ -183,11 +181,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+@functools.lru_cache(maxsize=1)
+def get_we_connect_api(username: str, password: str) -> weconnect.WeConnect:
+    """Return a cached weconnect api object, shared with the config flow."""
+    return weconnect.WeConnect(
+        username=username,
+        password=password,
+        updateAfterLogin=False,
+        loginOnInit=False,
+        timeout=10,
+        updatePictures=False,
+    )
+
+
+_last_successful_api_update_timestamp: float = 0.0
+_last_we_connect_api: weconnect.WeConnect | None = None
+_update_lock = threading.Lock()
+
+
 def update(
     api: weconnect.WeConnect
 ) -> None:
-    """API call to update vehicle information."""
-    api.update(updatePictures=False)
+    """API call to update vehicle information.
+
+    This function is called on its own thread and it is possible for multiple
+    threads to call it at the same time, before an earlier weconnect update()
+    call has finished. When the integration is loaded, multiple platforms
+    (binary_sensor, number...) may each call async_config_entry_first_refresh()
+    that in turn calls hass.async_add_executor_job() that creates a thread.
+    """
+    # pylint: disable=global-statement
+    global _last_successful_api_update_timestamp, _last_we_connect_api
+
+    # Acquire a lock so that only one thread can call api.update() at a time.
+    with _update_lock:
+        # Skip the update() call altogether if it was last succesfully called
+        # in the past 24 seconds (80% of the minimum update interval of 30s).
+        elapsed = time.monotonic() - _last_successful_api_update_timestamp
+        if elapsed <= 24 and api is _last_we_connect_api:
+            return
+        api.update(updatePictures=False)
+        _last_successful_api_update_timestamp = time.monotonic()
+        _last_we_connect_api = api
+
 
 def start_stop_charging(
     call_data_vin, api: weconnect.WeConnect, operation: str
@@ -331,6 +367,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        get_we_connect_api.cache_clear()
+        global _last_we_connect_api  # pylint: disable=global-statement
+        _last_we_connect_api = None
 
     return unload_ok
 
