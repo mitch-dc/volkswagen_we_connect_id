@@ -33,7 +33,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz"]
+SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz", "ID.7 Limousine"]
 
 
 @dataclass
