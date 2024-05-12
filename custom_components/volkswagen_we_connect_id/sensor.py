@@ -498,7 +498,7 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, SensorEntity):
 
         try:
             state = get_object_value(self.entity_description.value(self.data.domains))
-        except (KeyError, ValueError):
+        except (TypeError, KeyError, ValueError):
             return None
 
         return cast(StateType, state)
