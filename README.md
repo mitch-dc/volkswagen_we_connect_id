@@ -48,6 +48,7 @@ _This integration only works with cars sold in Europe and use the WeConnect ID a
 * Volkswagen ID.3
 * Volkswagen ID.4
 * Volkswagen ID.5
+* Volkswagen ID.7
 * Volkswagen ID Buzz
 * Volkswagen Tiguan (MKII)
 
