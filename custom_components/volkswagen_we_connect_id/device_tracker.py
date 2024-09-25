@@ -88,3 +88,17 @@ class VolkswagenIDSensor(VolkswagenIDBaseEntity, TrackerEntity):
     def icon(self):
         """Return the icon."""
         return "mdi:car"
+
+    @property
+    def extra_state_attributes(self):
+        """Return timestamp of when the data was captured."""
+        try:
+            return {
+                "last_captured": get_object_value(
+                    self.data.domains["parking"][
+                        "parkingPosition"
+                    ].carCapturedTimestamp.value
+                )
+            }
+        except KeyError:
+            return None
