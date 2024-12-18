@@ -2,13 +2,14 @@
   "domain": "volkswagen_we_connect_id",
   "name": "Volkswagen We Connect ID",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/volkswagen_we_connect_id",
-  "requirements": ["weconnect==0.60.3", "ascii_magic>=2.0.0"],
+  "documentation": "https://github.com/mitch-dc/volkswagen_we_connect_id#readme",
+  "requirements": ["weconnect==0.60.6", "ascii_magic>=2.0.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "loggers": ["weconnect"],
+  "issue_tracker": "https://github.com/mitch-dc/volkswagen_we_connect_id/issues",
   "codeowners": [
     "@mitch-dc"
   ],
