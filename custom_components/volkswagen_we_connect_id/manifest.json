@@ -8,7 +8,7 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "loggers": ["weconnect"]
+  "loggers": ["weconnect"],
   "issue_tracker": "https://github.com/mitch-dc/volkswagen_we_connect_id/issues",
   "codeowners": [
     "@mitch-dc"
