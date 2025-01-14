@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_we_connect_api, update
+from . import get_parameter, get_we_connect_api, update
 from .const import DOMAIN, DEFAULT_UPDATE_INTERVAL_SECONDS, MINIMUM_UPDATE_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,14 +92,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Manage the options."""
-
-        def get_parameter(config_entry: config_entries.ConfigEntry, parameter: str, default_val: Any = None):
-            """Get parameter from OptionsFlow or ConfigFlow"""
-            if parameter in config_entry.options.keys():
-                return config_entry.options.get(parameter)
-            if parameter in config_entry.data.keys():
-                return config_entry.data.get(parameter)
-            return default_val
 
         errors = {}
 

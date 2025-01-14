@@ -1,12 +1,14 @@
 """The Volkswagen We Connect ID integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import functools
 import logging
 import threading
 import time
+from typing import Any
 
 from weconnect import weconnect
 from weconnect.elements.vehicle import Vehicle
@@ -44,14 +46,21 @@ class DomainEntry:
     we_connect: weconnect.WeConnect
     vehicles: list[Vehicle]
 
+def get_parameter(config_entry: ConfigEntry, parameter: str, default_val: Any = None):
+    """Get parameter from OptionsFlow or ConfigFlow"""
+    if parameter in config_entry.options.keys():
+        return config_entry.options.get(parameter)
+    if parameter in config_entry.data.keys():
+        return config_entry.data.get(parameter)
+    return default_val
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen We Connect ID from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
     _we_connect = get_we_connect_api(
-        username=entry.data["username"],
-        password=entry.data["password"],
+        username=get_parameter(entry, "username"),
+        password=get_parameter(entry, "password"),
     )
 
     await hass.async_add_executor_job(_we_connect.login)
@@ -78,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=timedelta(
-            seconds=entry.data.get("update_interval") or DEFAULT_UPDATE_INTERVAL_SECONDS,
+            seconds=get_parameter(entry, "update_interval", DEFAULT_UPDATE_INTERVAL_SECONDS),
         ),
     )
 
@@ -177,6 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(
         DOMAIN, "volkswagen_id_set_ac_charge_speed", volkswagen_id_set_ac_charge_speed
     )
+
+    # Reload entry if configuration has changed
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -373,6 +385,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload_ok
 
+# Global lock
+volkswagen_we_connect_id_lock = asyncio.Lock()
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry."""
+    # Make sure setup is completed before next unload can be started.
+    async with volkswagen_we_connect_id_lock:
+        await async_unload_entry(hass, entry)
+        await async_setup_entry(hass, entry)
 
 def get_object_value(value) -> str:
     """Get value from object or enum."""
