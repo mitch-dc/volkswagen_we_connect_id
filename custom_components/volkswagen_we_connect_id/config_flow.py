@@ -8,7 +8,7 @@ import voluptuous as vol
 from weconnect.errors import AuthentificationError
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -50,6 +50,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -77,6 +85,50 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow handler"""
+
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Manage the options."""
+
+        def get_parameter(config_entry: config_entries.ConfigEntry, parameter: str, default_val: Any = None):
+            """Get parameter from OptionsFlow or ConfigFlow"""
+            if parameter in config_entry.options.keys():
+                return config_entry.options.get(parameter)
+            if parameter in config_entry.data.keys():
+                return config_entry.data.get(parameter)
+            return default_val
+
+        errors = {}
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except AuthentificationError:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username", default=get_parameter(self.config_entry, "username")): str,
+                    vol.Required("password", default=get_parameter(self.config_entry, "password")): str,
+                    vol.Optional(
+                        "update_interval", default=get_parameter(self.config_entry, "update_interval", DEFAULT_UPDATE_INTERVAL_SECONDS)
+                    ): vol.All(vol.Coerce(int), vol.Range(min=MINIMUM_UPDATE_INTERVAL_SECONDS)),
+                }
+            ),
+            errors=errors,
+        )
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
