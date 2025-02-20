@@ -18,5 +18,22 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username",
+                    "update_interval": "Update interval (seconds)"
+                }
+            }
+        }
     }
 }
