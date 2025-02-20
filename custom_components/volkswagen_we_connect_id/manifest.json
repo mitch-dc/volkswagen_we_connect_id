@@ -3,7 +3,7 @@
   "name": "Volkswagen We Connect ID",
   "config_flow": true,
   "documentation": "https://github.com/mitch-dc/volkswagen_we_connect_id#readme",
-  "requirements": ["weconnect==0.60.7", "ascii_magic>=2.0.0"],
+  "requirements": ["weconnect==0.60.8", "ascii_magic>=2.0.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
