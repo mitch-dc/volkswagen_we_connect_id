@@ -1,6 +1,6 @@
 """Button integration."""
-from weconnect import weconnect
-from weconnect.elements.vehicle import Vehicle
+from carconnectivity import carconnectivity
+from carconnectivity_connectors.volkswagen.vehicle import VolkswagenElectricVehicle
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +11,7 @@ from . import (
     DomainEntry,
     get_object_value,
     set_ac_charging_speed,
-    set_climatisation,
+    start_stop_climatisation,
     start_stop_charging,
 )
 from .const import DOMAIN
@@ -24,16 +24,16 @@ async def async_setup_entry(
 ) -> bool:
     """Add buttons for passed config_entry in HA."""
     domain_entry: DomainEntry = hass.data[DOMAIN][config_entry.entry_id]
-    we_connect = domain_entry.we_connect
+    car_connectivity = domain_entry.car_connectivity
     vehicles = domain_entry.vehicles
 
     entities = []
-    for vehicle in vehicles:  # weConnect.vehicles.items():
-        entities.append(VolkswagenIDStartClimateButton(vehicle, we_connect))
-        entities.append(VolkswagenIDStopClimateButton(vehicle, we_connect))
-        entities.append(VolkswagenIDToggleACChargeSpeed(vehicle, we_connect))
-        entities.append(VolkswagenIDStartChargingButton(vehicle, we_connect))
-        entities.append(VolkswagenIDStopChargingButton(vehicle, we_connect))
+    for vehicle in vehicles:
+        entities.append(VolkswagenIDStartClimateButton(vehicle, car_connectivity))
+        entities.append(VolkswagenIDStopClimateButton(vehicle, car_connectivity))
+        entities.append(VolkswagenIDToggleACChargeSpeed(vehicle, car_connectivity))
+        entities.append(VolkswagenIDStartChargingButton(vehicle, car_connectivity))
+        entities.append(VolkswagenIDStopChargingButton(vehicle, car_connectivity))
 
     async_add_entities(entities)
 
@@ -43,63 +43,63 @@ async def async_setup_entry(
 class VolkswagenIDStartClimateButton(ButtonEntity):
     """Button for starting climate."""
 
-    def __init__(self, vehicle, we_connect) -> None:
+    def __init__(self, vehicle: VolkswagenElectricVehicle, car_connectivity: carconnectivity.CarConnectivity) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"{vehicle.nickname} Start Climate"
+        self._attr_name = f"{vehicle.name} Start Climate"
         self._attr_unique_id = f"{vehicle.vin}-start_climate"
         self._attr_icon = "mdi:fan-plus"
-        self._we_connect = we_connect
+        self._car_connectivity = car_connectivity
         self._vehicle = vehicle
 
     def press(self) -> None:
         """Handle the button press."""
-        set_climatisation(self._vehicle.vin.value, self._we_connect, "start", 0)
+        start_stop_climatisation(self._vehicle.vin.value, self._car_connectivity, "start")
 
 
 class VolkswagenIDStopClimateButton(ButtonEntity):
     """Button for stopping climate."""
 
-    def __init__(self, vehicle, we_connect) -> None:
+    def __init__(self, vehicle: VolkswagenElectricVehicle, car_connectivity: carconnectivity.CarConnectivity) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"{vehicle.nickname} Stop Climate"
+        self._attr_name = f"{vehicle.name} Stop Climate"
         self._attr_unique_id = f"{vehicle.vin}-stop_climate"
         self._attr_icon = "mdi:fan-off"
-        self._we_connect = we_connect
+        self._car_connectivity = car_connectivity
         self._vehicle = vehicle
 
     def press(self) -> None:
         """Handle the button press."""
-        set_climatisation(self._vehicle.vin.value, self._we_connect, "stop", 0)
+        start_stop_climatisation(self._vehicle.vin.value, self._car_connectivity, "stop")
 
 
 class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
     """Button for toggling the charge speed."""
 
-    def __init__(self, vehicle: Vehicle, we_connect: weconnect.WeConnect) -> None:
+    def __init__(self, vehicle: VolkswagenElectricVehicle, car_connectivity: carconnectivity.CarConnectivity) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"{vehicle.nickname} Toggle AC Charge Speed"
+        self._attr_name = f"{vehicle.name} Toggle AC Charge Speed"
         self._attr_unique_id = f"{vehicle.vin}-toggle_ac_charge_speed"
         self._attr_icon = "mdi:ev-station"
-        self._we_connect = we_connect
+        self._car_connectivity = car_connectivity
         self._vehicle = vehicle
 
     def press(self) -> None:
         """Handle the button press."""
 
         current_state = get_object_value(
-            self._vehicle.domains["charging"]["chargingSettings"].maxChargeCurrentAC
+            self._vehicle.charging.settings.maximum_current.value
         )
 
         if current_state == "maximum":
             set_ac_charging_speed(
                 self._vehicle.vin.value,
-                self._we_connect,
+                self._car_connectivity,
                 "reduced",
             )
         else:
             set_ac_charging_speed(
                 self._vehicle.vin.value,
-                self._we_connect,
+                self._car_connectivity,
                 "maximum",
             )
 
@@ -107,30 +107,30 @@ class VolkswagenIDToggleACChargeSpeed(ButtonEntity):
 class VolkswagenIDStartChargingButton(ButtonEntity):
     """Button for start charging."""
 
-    def __init__(self, vehicle, we_connect) -> None:
+    def __init__(self, vehicle: VolkswagenElectricVehicle, car_connectivity: carconnectivity.CarConnectivity) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"{vehicle.nickname} Start Charging"
+        self._attr_name = f"{vehicle.name} Start Charging"
         self._attr_unique_id = f"{vehicle.vin}-start_charging"
         self._attr_icon = "mdi:play-circle-outline"
-        self._we_connect = we_connect
+        self._car_connectivity = car_connectivity
         self._vehicle = vehicle
 
     def press(self) -> None:
         """Handle the button press."""
-        start_stop_charging(self._vehicle.vin.value, self._we_connect, "start")
+        start_stop_charging(self._vehicle.vin.value, self._car_connectivity, "start")
 
 
 class VolkswagenIDStopChargingButton(ButtonEntity):
     """Button for stop charging."""
 
-    def __init__(self, vehicle, we_connect) -> None:
+    def __init__(self, vehicle: VolkswagenElectricVehicle, car_connectivity: carconnectivity.CarConnectivity) -> None:
         """Initialize VolkswagenID vehicle sensor."""
-        self._attr_name = f"{vehicle.nickname} Stop Charging"
+        self._attr_name = f"{vehicle.name} Stop Charging"
         self._attr_unique_id = f"{vehicle.vin}-stop_charging"
         self._attr_icon = "mdi:stop-circle-outline"
-        self._we_connect = we_connect
+        self._car_connectivity = car_connectivity
         self._vehicle = vehicle
 
     def press(self) -> None:
         """Handle the button press."""
-        start_stop_charging(self._vehicle.vin.value, self._we_connect, "stop")
+        start_stop_charging(self._vehicle.vin.value, self._car_connectivity, "stop")

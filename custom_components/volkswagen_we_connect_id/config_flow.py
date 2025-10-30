@@ -5,14 +5,14 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from weconnect.errors import AuthentificationError
+from carconnectivity.errors import AuthenticationError
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_parameter, get_we_connect_api, update
+from . import get_parameter, get_car_connectivity_api, update
 from .const import DOMAIN, DEFAULT_UPDATE_INTERVAL_SECONDS, MINIMUM_UPDATE_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,15 +31,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    we_connect = get_we_connect_api(
-        username=data["username"],
-        password=data["password"],
-    )
-
-    await hass.async_add_executor_job(we_connect.login)
-    await hass.async_add_executor_job(update, we_connect)
-
-    # vin = next(iter(we_connect.vehicles.items()))[0]
+    car_connectivity = await hass.async_add_executor_job(get_car_connectivity_api,
+                                                         data["username"],
+                                                         data["password"]
+                                                         )
+    await hass.async_add_executor_job(update, car_connectivity)
 
     return {"title": "Volkswagen We Connect ID"}
 
@@ -73,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except AuthentificationError:
+        except AuthenticationError:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -100,7 +96,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except AuthentificationError:
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

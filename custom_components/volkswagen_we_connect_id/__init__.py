@@ -9,10 +9,13 @@ import logging
 import threading
 import time
 from typing import Any
+from typing import TYPE_CHECKING
 
-from weconnect import weconnect
-from weconnect.elements.vehicle import Vehicle
-from weconnect.elements.control_operation import ControlOperation
+from carconnectivity import carconnectivity
+from carconnectivity.commands import GenericCommand
+from carconnectivity.command_impl import ChargingStartStopCommand, ClimatizationStartStopCommand
+from carconnectivity_connectors.volkswagen.vehicle import VolkswagenElectricVehicle
+from carconnectivity_connectors.volkswagen.charging import VolkswagenCharging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -37,14 +40,16 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_VEHICLES = ["ID.3", "ID.4", "ID.5", "ID. Buzz", "ID.7 Limousine", "ID.7 Tourer"]
 
+if TYPE_CHECKING:
+    from typing import Optional
 
 @dataclass
 class DomainEntry:
     """References to objects shared through hass.data[DOMAIN][config_entry_id]."""
 
-    coordinator: DataUpdateCoordinator[list[Vehicle]]
-    we_connect: weconnect.WeConnect
-    vehicles: list[Vehicle]
+    coordinator: DataUpdateCoordinator[list[VolkswagenElectricVehicle]]
+    car_connectivity: carconnectivity.CarConnectivity
+    vehicles: list[VolkswagenElectricVehicle]
 
 def get_parameter(config_entry: ConfigEntry, parameter: str, default_val: Any = None):
     """Get parameter from OptionsFlow or ConfigFlow"""
@@ -58,22 +63,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen We Connect ID from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    _we_connect = get_we_connect_api(
-        username=get_parameter(entry, "username"),
-        password=get_parameter(entry, "password"),
-    )
+    _car_connectivity = await hass.async_add_executor_job(get_car_connectivity_api,
+                                                          get_parameter(entry, "username"),
+                                                          get_parameter(entry, "password")
+                                                          )
 
-    await hass.async_add_executor_job(_we_connect.login)
-    await hass.async_add_executor_job(update, _we_connect)
+    await hass.async_add_executor_job(update, _car_connectivity)
 
-    async def async_update_data() -> list[Vehicle]:
+    async def async_update_data() -> list[VolkswagenElectricVehicle]:
         """Fetch data from Volkswagen API."""
 
-        await hass.async_add_executor_job(update, _we_connect)
+        await hass.async_add_executor_job(update, _car_connectivity)
 
-        vehicles: list[Vehicle] = []
+        vehicles: list[VolkswagenElectricVehicle] = []
 
-        for vin, vehicle in _we_connect.vehicles.items():
+        for vehicle in _car_connectivity.garage.list_vehicles():
             if vehicle.model.value in SUPPORTED_VEHICLES:
                 vehicles.append(vehicle)
 
@@ -81,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain_entry.vehicles = vehicles
         return vehicles
 
-    coordinator = DataUpdateCoordinator[list[Vehicle]](
+    coordinator = DataUpdateCoordinator[list[VolkswagenElectricVehicle]](
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -91,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = DomainEntry(coordinator, _we_connect, [])
+    hass.data[DOMAIN][entry.entry_id] = DomainEntry(coordinator, _car_connectivity, [])
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
@@ -109,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(
                 start_stop_charging,
                 vin,
-                _we_connect,
+                _car_connectivity,
                 start_stop,
             )
             is False
@@ -127,9 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if (
             await hass.async_add_executor_job(
-                set_climatisation,
+                set_climatisation_temperature,
                 vin,
-                _we_connect,
+                _car_connectivity,
                 start_stop,
                 target_temperature,
             )
@@ -149,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(
                 set_target_soc,
                 vin,
-                _we_connect,
+                _car_connectivity,
                 target_soc,
             )
             is False
@@ -165,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.async_add_executor_job(
                     set_ac_charging_speed,
                     vin,
-                    _we_connect,
+                    _car_connectivity,
                     call.data["maximum_reduced"],
                 )
                 is False
@@ -194,182 +198,203 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @functools.lru_cache(maxsize=1)
-def get_we_connect_api(username: str, password: str) -> weconnect.WeConnect:
-    """Return a cached weconnect api object, shared with the config flow."""
-    return weconnect.WeConnect(
-        username=username,
-        password=password,
-        updateAfterLogin=False,
-        loginOnInit=False,
-        timeout=10,
-        updatePictures=False,
+def get_car_connectivity_api(username: str, password: str) -> carconnectivity.CarConnectivity:
+    """Return a cached carconnectivity api object, shared with the config flow."""
+
+    return carconnectivity.CarConnectivity(
+        config={"carConnectivity":{"connectors":[{"type": "volkswagen","config":{"username":username,"password":password}}]}}
     )
 
 
 _last_successful_api_update_timestamp: float = 0.0
-_last_we_connect_api: weconnect.WeConnect | None = None
+_last_car_connectivity_api: carconnectivity.CarConnectivity | None = None
 _update_lock = threading.Lock()
 
 
 def update(
-    api: weconnect.WeConnect
+    api: carconnectivity.CarConnectivity
 ) -> None:
     """API call to update vehicle information.
 
     This function is called on its own thread and it is possible for multiple
-    threads to call it at the same time, before an earlier weconnect update()
+    threads to call it at the same time, before an earlier carconnectivity update()
     call has finished. When the integration is loaded, multiple platforms
     (binary_sensor, number...) may each call async_config_entry_first_refresh()
     that in turn calls hass.async_add_executor_job() that creates a thread.
     """
     # pylint: disable=global-statement
-    global _last_successful_api_update_timestamp, _last_we_connect_api
+    global _last_successful_api_update_timestamp, _last_car_connectivity_api
 
     # Acquire a lock so that only one thread can call api.update() at a time.
     with _update_lock:
         # Skip the update() call altogether if it was last succesfully called
         # in the past 24 seconds (80% of the minimum update interval of 30s).
         elapsed = time.monotonic() - _last_successful_api_update_timestamp
-        if elapsed <= 24 and api is _last_we_connect_api:
+        if elapsed <= 24 and api is _last_car_connectivity_api:
             return
-        api.update(updatePictures=False)
+        api.fetch_all()
         _last_successful_api_update_timestamp = time.monotonic()
-        _last_we_connect_api = api
+        _last_car_connectivity_api = api
 
 
 def start_stop_charging(
-    call_data_vin, api: weconnect.WeConnect, operation: str
+    call_data_vin, api: carconnectivity.CarConnectivity, operation: str
 ) -> bool:
     """Start of stop charging of your volkswagen."""
 
-    for vin, vehicle in api.vehicles.items():
-        if vin == call_data_vin:
+    if not operation in ("start", "stop"):
+        _LOGGER.error("Operation not supported - %s", operation)
+        return False
+    
+    vehicle: Optional[VolkswagenElectricVehicle] = api.garage.get_vehicle(vehicle_id=call_data_vin)
+    if vehicle is None:
+        _LOGGER.error("Failed to find car - %s", call_data_vin)
+        return False
 
-            if operation == "start":
-                try:
-                    if (
-                        vehicle.controls.chargingControl is not None
-                        and vehicle.controls.chargingControl.enabled
-                    ):
-                        vehicle.controls.chargingControl.value = ControlOperation.START
-                        _LOGGER.info("Sended start charging call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    if (
+        vehicle.charging is None
+        or not vehicle.charging.state in (VolkswagenCharging.VolkswagenChargingState.UNSUPPORTED)
+        or vehicle.charging.commands is None
+        or not vehicle.charging.commands.contains_command("start-stop")
+        ):
+        _LOGGER.error("Vehicle does not support charging - %s", call_data_vin)
+        return False
+    
+    start_stop_command: GenericCommand = vehicle.charging.commands.commands["start-stop"]
+    if not isinstance(start_stop_command, ChargingStartStopCommand):
+        _LOGGER.error("start-stop command not supported - %s", call_data_vin)
+        return False
 
-            if operation == "stop":
-                try:
-                    if (
-                        vehicle.controls.chargingControl is not None
-                        and vehicle.controls.chargingControl.enabled
-                    ):
-                        vehicle.controls.chargingControl.value = ControlOperation.STOP
-                        _LOGGER.info("Sended stop charging call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    try:
+        start_stop_command.value = operation
+        _LOGGER.info("Sent %s charging call to the vehicle", operation)
+    except Exception as exc:
+        _LOGGER.error("Failed to send %s charging request to vehicle - %s", operation, exc)
+        return False
+
     return True
 
 
 def set_ac_charging_speed(
-    call_data_vin, api: weconnect.WeConnect, charging_speed
+    call_data_vin, api: carconnectivity.CarConnectivity, charging_speed
 ) -> bool:
     """Set charging speed in your volkswagen."""
 
-    for vin, vehicle in api.vehicles.items():
-        if vin == call_data_vin:
-            if (
-                charging_speed
-                != vehicle.domains["charging"][
-                    "chargingSettings"
-                ].maxChargeCurrentAC.value
-            ):
-                try:
-                    vehicle.domains["charging"][
-                        "chargingSettings"
-                    ].maxChargeCurrentAC.value = charging_speed
-                    _LOGGER.info("Sended charging speed call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    vehicle: Optional[VolkswagenElectricVehicle] = api.garage.get_vehicle(vehicle_id=call_data_vin)
+    if vehicle is None:
+        _LOGGER.error("Failed to find car - %s", call_data_vin)
+        return False
+
+    if charging_speed == vehicle.charging.rate.value:
+        _LOGGER.info("Charging speed already set to value %s", charging_speed)
+        return True
+
+    try:
+        vehicle.charging.rate.value = charging_speed
+        _LOGGER.info("Sent charging speed call to the car")
+    except Exception as exc:
+        _LOGGER.error("Failed to send request to car - %s", exc)
+        return False
 
     return True
 
 
-def set_target_soc(call_data_vin, api: weconnect.WeConnect, target_soc: int) -> bool:
+def set_target_soc(call_data_vin, api: carconnectivity.CarConnectivity, target_soc: int) -> bool:
     """Set target SOC in your volkswagen."""
 
     target_soc = int(target_soc)
 
-    for vin, vehicle in api.vehicles.items():
-        if vin == call_data_vin:
-            if (
-                target_soc > 10
-                and target_soc
-                != vehicle.domains["charging"]["chargingSettings"].targetSOC_pct.value
-            ):
-                try:
-                    vehicle.domains["charging"][
-                        "chargingSettings"
-                    ].targetSOC_pct.value = target_soc
-                    _LOGGER.info("Sended target SoC call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    if target_soc < 10:
+        _LOGGER.error("Target state of charge needs to be at least 10 - %s", target_soc)
+        return False
+
+    vehicle: Optional[VolkswagenElectricVehicle] = api.garage.get_vehicle(vehicle_id=call_data_vin)
+    if vehicle is None:
+        _LOGGER.error("Failed to find car - %s", call_data_vin)
+        return False
+
+    if target_soc == vehicle.charging.settings.target_level.value:
+        _LOGGER.info("Target state of charge already set to value - %s", target_soc)
+        return True
+
+    try:
+        vehicle.charging.settings.target_level.value = target_soc
+        _LOGGER.info("Sent target SoC call to the car")
+    except Exception as exc:
+        _LOGGER.error("Failed to send request to car - %s", exc)
+        return False
+
     return True
 
 
-def set_climatisation(
-    call_data_vin, api: weconnect.WeConnect, operation: str, target_temperature: float
+def set_climatisation_temperature(
+    call_data_vin, api: carconnectivity.CarConnectivity, target_temperature: float
 ) -> bool:
     """Set climate in your volkswagen."""
 
-    for vin, vehicle in api.vehicles.items():
-        if vin == call_data_vin:
+    if target_temperature < 10:
+        _LOGGER.error("Target temperature needs to be at least 10 - %s", target_temperature)
+        return False
 
-            if (
-                target_temperature > 10
-                and target_temperature
-                != vehicle.domains["climatisation"][
-                    "climatisationSettings"
-                ].targetTemperature_C.value
-            ):
-                try:
-                    vehicle.domains["climatisation"][
-                        "climatisationSettings"
-                    ].targetTemperature_C.value = float(target_temperature)
-                    _LOGGER.info("Sended target temperature call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    vehicle: Optional[VolkswagenElectricVehicle] = api.garage.get_vehicle(vehicle_id=call_data_vin)
+    if vehicle is None:
+        _LOGGER.error("Failed to find car - %s", call_data_vin)
+        return False
 
-            if operation == "start":
-                try:
-                    if (
-                        vehicle.controls.climatizationControl is not None
-                        and vehicle.controls.climatizationControl.enabled
-                    ):
-                        vehicle.controls.climatizationControl.value = (
-                            ControlOperation.START
-                        )
-                        _LOGGER.info("Sended start climate call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    if (
+        vehicle.climatization.settings is None
+        or not vehicle.climatization.settings.enabled
+    ):
+        _LOGGER.error("Climatisation settings not supported - %s", call_data_vin)
+        return False
 
-            if operation == "stop":
-                try:
-                    if (
-                        vehicle.controls.climatizationControl is not None
-                        and vehicle.controls.climatizationControl.enabled
-                    ):
-                        vehicle.controls.climatizationControl.value = (
-                            ControlOperation.STOP
-                        )
-                        _LOGGER.info("Sended stop climate call to the car")
-                except Exception as exc:
-                    _LOGGER.error("Failed to send request to car - %s", exc)
-                    return False
+    if target_temperature == vehicle.climatization.settings.target_temperature.value:
+        _LOGGER.info("Target temperature already set to value - %s", target_temperature)
+        return True
+
+    try:
+        vehicle.climatization.settings.target_temperature.value = float(target_temperature)
+        _LOGGER.info("Sended target temperature call to the car")
+    except Exception as exc:
+        _LOGGER.error("Failed to send request to car - %s", exc)
+        return False
+
+    return True
+
+def start_stop_climatisation(
+    call_data_vin, api: carconnectivity.CarConnectivity, operation: str
+) -> bool:
+    """Set climate in your volkswagen."""
+
+    if not operation in ["start", "stop"]:
+        _LOGGER.error("Operation not supported - %s", operation)
+        return False
+
+    vehicle: Optional[VolkswagenElectricVehicle] = api.garage.get_vehicle(vehicle_id=call_data_vin)
+    if vehicle is None:
+        _LOGGER.error("Failed to find car - %s", call_data_vin)
+        return False
+
+    if (
+        vehicle.climatization.settings is None
+        or not vehicle.climatization.settings.enabled
+        or not vehicle.climatization.commands.contains_command("start-stop")
+    ):
+        _LOGGER.error("Climatisation start-stop not supported - %s", call_data_vin)
+        return False
+
+    start_stop_command: GenericCommand = vehicle.climatization.commands.commands["start-stop"]
+    if not isinstance(start_stop_command, ClimatizationStartStopCommand):
+        _LOGGER.error("start-stop climatisation command not supported - %s", call_data_vin)
+        return False
+
+    try:
+        start_stop_command.value = operation
+        _LOGGER.info("Sent climatisation call to car - %s", call_data_vin)
+    except Exception as exc:
+        _LOGGER.error("Failed to send request to car - %s", exc)
+        return False
+
     return True
 
 
@@ -379,19 +404,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-        get_we_connect_api.cache_clear()
-        global _last_we_connect_api  # pylint: disable=global-statement
-        _last_we_connect_api = None
+        get_car_connectivity_api.cache_clear()
+        global _last_car_connectivity_api  # pylint: disable=global-statement
+        _last_car_connectivity_api = None
 
     return unload_ok
 
 # Global lock
-volkswagen_we_connect_id_lock = asyncio.Lock()
+volkswagen_car_connectivity_id_lock = asyncio.Lock()
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
     # Make sure setup is completed before next unload can be started.
-    async with volkswagen_we_connect_id_lock:
+    async with volkswagen_car_connectivity_id_lock:
         await async_unload_entry(hass, entry)
         await async_setup_entry(hass, entry)
 
@@ -412,23 +437,23 @@ class VolkswagenIDBaseEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        we_connect: weconnect.WeConnect,
+        car_connectivity: carconnectivity.CarConnectivity,
         coordinator: DataUpdateCoordinator,
         index: int,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
-        self.we_connect = we_connect
+        self.car_connectivity = car_connectivity
         self.index = index
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"vw{self.data.vin}")},
             manufacturer="Volkswagen",
             model=f"{self.data.model}",  # format because of the ID.3/ID.4 names.
-            name=f"Volkswagen {self.data.nickname} ({self.data.vin})",
+            name=f"Volkswagen {self.data.name} ({self.data.vin})",
         )
 
     @property
-    def data(self):
+    def data(self) -> VolkswagenElectricVehicle:
         """Shortcut to access coordinator data for the entity."""
         return self.coordinator.data[self.index]
